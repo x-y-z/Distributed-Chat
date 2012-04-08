@@ -29,18 +29,19 @@ enum udp_state
 class UDP
 {
 public:
-    UDP(int port);
-    UDP(struct sockaddr_in addr);
+    UDP(int port);//server
+    UDP(struct sockaddr_in addr);//client
     ~UDP(){ closesocket(_socket);};
 
 public:
     static struct sockaddr_in fromAddrToSock(const char *host, const int port);
-public:
+private:
     void setListenPort(int port);
     void setRemoteAddr(struct sockaddr_in addr);
     void setRemoteAddr(const char *host, int port);
 
     //int close(){};
+public:
     int sendTo(void *msg, size_t size, 
                const struct sockaddr *dest, socklen_t dest_len);
     int recvFrom(void *msg, size_t size,
@@ -51,8 +52,7 @@ private:
     udp_state _state;
     SOCKET _socket;
     struct sockaddr_in _addr;
-    struct sockaddr_in _peer_list;
-
+    struct sockaddr_in _client;
 };
 
 

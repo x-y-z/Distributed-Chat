@@ -41,8 +41,6 @@ UDP::UDP(struct sockaddr_in addr)
     
     _type = client;
 
-    _addr = addr;
-
     ptrp = getprotobyname("udp");
     if (ptrp == 0)
     {
@@ -74,6 +72,7 @@ struct sockaddr_in UDP::fromAddrToSock(const char *host, const int port)
 
     memcpy(&tmp_addr.sin_addr, ptrh->h_addr, ptrh->h_length);
     tmp_addr.sin_port = htons((u_short)port);
+    tmp_addr.sin_family = AF_INET;
 
     return tmp_addr;
 }
@@ -96,12 +95,12 @@ void UDP::setRemoteAddr(const char *host, int port)
 int UDP::sendTo(void *msg, size_t size,
                 const struct sockaddr *dest, socklen_t dest_len)
 {
-
+    return sendto(_socket, msg, size, 0, dest, dest_len);
 }
 
 int UDP::recvFrom(void *msg, size_t size,
                   struct sockaddr *src, socklen_t *src_len)
 {
-
+    return recvfrom(_socket, msg, size, 0, src, src_len);
 }
 
