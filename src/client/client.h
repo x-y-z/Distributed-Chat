@@ -14,13 +14,18 @@
 
 #define DEFUAL_CLIENT_CAPACITY 100
 
+typedef struct neighbor{
+    char name[50],IP[20];
+    int port,C_ID;
+} peer;
+
 class client
 {
 private:
     const char* IP, name, s_ip;
     int port, C_ID, s_port, reSendCount;
     myMsg msgToSend;
-    vector<client> clientList(DEFUAL_CLIENT_CAPACITY); 
+    vector<peer> clientList(DEFUAL_CLIENT_CAPACITY); 
 public:
     client(const char* name, const char* IP, int port);
     ~client(){};

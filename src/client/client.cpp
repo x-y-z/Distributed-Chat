@@ -39,9 +39,29 @@ int client::processMSG(myMsg msg)
     else{
         switch (parser.msgTypeIs()) {
             case join:
+                //the client get a Join message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
                 
                 break;
-            
+            case join_ack:
+                
+                break;
+                
+            case join_broadcast:
+                break;
+            case leave:
+                break;
+            case leave_broadcast:
+                break;
+            case msg:
+                break;
+            case msg_broadcast:
+                break;
+            case election_req:
+                break;
+            case election_ok:
+                break;
+            case msgError:
+                break;
                 
             default:
                 break;
