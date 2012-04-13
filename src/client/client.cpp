@@ -7,11 +7,14 @@
 //
 
 #include <iostream>
+#include <string>
 #include "client.h"
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+
+using namespace std;
 
 //handle time out
 //void client::sig_al_handler(int signum){
@@ -40,6 +43,10 @@ int client::processMSG(myMsg msg)
         switch (parser.msgTypeIs()) {
             case join:
                 //the client get a Join message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
+                char getMsg[256];
+                int msgLen;
+                parser.msgContent(getMsg, msgLen);
+                string content(getMsg, msgLen);
                 
                 break;
             case join_ack:
