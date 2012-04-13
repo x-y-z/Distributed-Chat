@@ -28,6 +28,8 @@ msgParser::msgParser(const char *msg, int len)
     _content.msgContent = new char[_content.msgLen + 1];
     memset(_content.msgContent, 0, _content.msgLen + 1);
     memcpy(_content.msgContent, msg + head_size, _content.msgLen);
+
+    init = true;
 }
 
 bool msgParser::isACK()
@@ -57,50 +59,49 @@ bool msgParser::isACK()
 
 msgType msgParser::msgTypeIs()
 {
+    msgType ret = msgError;
     if (init == false)
-    {
-        //throw
-        return msgError;
-    }
+        return ret;
+
 
     switch (_content.chat)
     {
         case 0:
-            return join;
+            ret = join;
             break;
         case 1:
-            return navi;
+            ret = navi;
             break;
         case 2:
-            return join_ack;
+            ret = join_ack;
             break;
         case 3:
-            return join_broadcast;
+            ret = join_broadcast;
             break;
         case 4:
-            return leave;
+            ret = leave;
             break;
         case 5:
-            return leave_broadcast;
+            ret = leave_broadcast;
             break;
         case 6:
-            return msg;
+            ret = msg;
             break;
         case 7:
-            return msg_broadcast;
+            ret = msg_broadcast;
             break;
         case 8:
-            return election_req;
+            ret = election_req;
             break;
         case 9:
-            return election_ok;
+            ret = election_ok;
             break;
         default:
-            return msgError;
+            ret = msgError;
             break;
     }
 
-    return msgError;
+    return ret;
 
 }
 

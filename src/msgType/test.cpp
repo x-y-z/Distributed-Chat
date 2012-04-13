@@ -26,19 +26,22 @@ int main()
     string msg;
     int mLen;
 
-    string name;
+    string ip, name;
     int port, id;
 
     aMaker.setInfo("yanzi", "127.0.0.1", 1234, 9999);
 
-    aMsg = aMaker.makeACK();
+    //aMsg = aMaker.makeACK();
+    aMsg = aMaker.makeJoin("mm");
     msgMaker::serlize(msg, mLen, aMsg);
 
     cout<<"msg:"<<msg<<endl;
 
     msgParser aParser(msg.c_str(), mLen);
-    aParser.senderInfo(name, port, id);
+    aParser.senderInfo(ip, port, id);
+    int a = aParser.joinName(name);
+    cout<<"status:"<<a<<endl;
 
-    cout<<"name is:"<<name<<", port:"<<port<<", id:"<<id<<endl;   
+    cout<<"name is:"<<name<<"ip is:"<<ip<<", port:"<<port<<", id:"<<id<<endl;   
 
 }

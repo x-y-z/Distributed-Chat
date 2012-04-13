@@ -40,7 +40,7 @@ myMsg msgMaker::makeACK()
     return tmp;
 }
 
-myMsg msgMaker::makeJoin(string &name)
+myMsg msgMaker::makeJoin(const string &name)
 {
     myMsg tmp;
     memset(&tmp, 0, sizeof(myMsg));
@@ -115,7 +115,7 @@ myMsg msgMaker::makeJoinACK(int msgMaxCnt, int c_id,
 }
 
 
-myMsg msgMaker::makeJoinBCast(string &name)
+myMsg msgMaker::makeJoinBCast(const string &name)
 {
     myMsg tmp;
     memset(&tmp, 0, sizeof(myMsg));

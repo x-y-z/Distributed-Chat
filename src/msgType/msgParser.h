@@ -60,7 +60,7 @@ private:
     bool init;
 public:
     msgParser(){init = false;};
-    msgParser(myMsg aMsg){ _content = aMsg; init = true;};
+//    msgParser(myMsg aMsg){ _content = aMsg; init = true;};
     msgParser(const char *msg, int len);
     ~msgParser(){};
 public:

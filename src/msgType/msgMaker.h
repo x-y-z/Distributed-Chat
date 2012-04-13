@@ -42,9 +42,9 @@ public:
 
     tmpMsg = new char[outLen];
 
-    strncpy(tmpMsg, (char*)&inMsg, sizeof(myMsg) - sizeof(char *));
+    memcpy(tmpMsg, (char*)&inMsg, sizeof(myMsg) - sizeof(char *));
 
-    strncpy(tmpMsg + sizeof(myMsg) - sizeof(char*), inMsg.msgContent, 
+    memcpy(tmpMsg + sizeof(myMsg) - sizeof(char*), inMsg.msgContent, 
             inMsg.msgLen);
     
     outMsg.assign(tmpMsg, outLen);
@@ -59,10 +59,10 @@ public:
         _name = name;
     }
     myMsg makeACK();
-    myMsg makeJoin(string &name);
+    myMsg makeJoin(const string &name);
     myMsg makeNavi(); 
     myMsg makeJoinACK(int msgMaxCnt, int c_id, const vector<peer> &peerlist);
-    myMsg makeJoinBCast(string &name);
+    myMsg makeJoinBCast(const string &name);
     myMsg makeLeave();
     myMsg makeLeaveBCase();
     myMsg makeMsg(const char *msgCnt, int msgLen);
