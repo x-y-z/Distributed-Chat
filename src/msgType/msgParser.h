@@ -11,6 +11,8 @@
 #define _myMsg_h
 #define MAXLENGTH 255
 
+
+
 typedef struct neighbor{
     char name[50],IP[20];
     int port,C_ID;

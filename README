@@ -1,3 +1,7 @@
 cis505 course project
 
 A simple distributed chatting program
+
+
+**NOTE**: 
+	1. In the message struct, the field "IP" and "port" is used to send the IP and port, not used to indicate the IP and port of the sender.
