@@ -16,7 +16,6 @@
 
 using namespace std;
 
-#define DEFAULT_CLIENT_CAPACITY 100
 
 typedef struct neighbor{
     char name[50],IP[20];
@@ -26,21 +25,21 @@ typedef struct neighbor{
 class client
 {
 private:
-    string IP, name, s_ip;
+    char* IP, name, s_ip;
     int port, C_ID, s_port, reSendCount;
     myMsg msgToSend;
-    vector<peer> clientList(DEFAULT_CLIENT_CAPACITY); 
+    vector<peer> clientList; 
 public:
-    client(string name, string IP, int port);
+    client(char* name, const char* IP, int port);
     ~client(){};
 
 public:
     int processMSG(myMsg msg);
     
 private:
-    int join(string s_ip, int s_port);
-    int sendBroadcastMsg(string msgContent);
-    int addNewUser(string name, string newCIP, int newCPort, int newCID);
+    int join(const char* s_ip, int s_port);
+    int sendBroadcastMsg(char* msgContent);
+    int addNewUser(char* name, const char* newCIP, int newCPort, int newCID);
     int removeUser(int CID);
     void setCID(int ID);
     void doElection(myMsg msg);
