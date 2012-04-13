@@ -7,9 +7,13 @@
 //  Copyright (c) 2012年  All rights reserved.
 //
 
-#ifndef _myMsg_h
-#define _myMsg_h
-#define MAXLENGTH 255
+#ifndef __MYMSG_H__
+#define __MYMSG_H__
+
+#include <string>
+#include <vector>
+
+using namespace std;
 
 
 
