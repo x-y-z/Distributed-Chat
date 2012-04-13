@@ -28,6 +28,7 @@ private:
     int  s_port, reSendCount;
     myMsg msgToSend;
     msgMaker mmaker;//set up necassary info by calling the "setInfo" function
+    UDP clntUDP;
     vector<peer> clientList; 
     queue<string> localMsgQ;
 public:

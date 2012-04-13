@@ -88,24 +88,42 @@ int client::processMSG(myMsg msg)
 
 int client::join(string s_ip, int s_port){
     //setupt the UDP socket
-    struct sockaddr_in saddr;
-    int saddr_len = 0;
-    saddr = UDP::fromAddrToSock(s_ip.c_str(),port);
-    saddr_len = sizeof(saddr);
-    UDP client(saddr);
+    clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
     
     //args: sequencer's ip, port, myIP, myPort,myName;
 //    myMsg message = mmaker.makeJoin(s_ip, s_port,IP,port,name);
 //    char[100] temp = (char) message;
-//    client.sendTo(temp,sizeof(temp),saddr,saddr_len);
+//    clnt.sendTo(temp,sizeof(temp),saddr,saddr_len);
     return 1;
 }
 
-int sendBroadcastMsg(string msgContent){
+int client::sendBroadcastMsg(string msgContent){
     
     myMsg message = mmaker.makeMsg(msgContent.c_str(),msgContent.size());
     //char temp = (char) message;
+    //send the serialized message out.
+    return 1;
+}
+
+int client::addNewUser(string name, string newCIP, int newCPort, int newCID){
+    peer p;
+    strncpy(p.name, name.c_str(),name.size());
+    strncpy(p.ip, newCIP.c_str(),newCIP.size());
+    p.port = newCPort;
+    p.c_id = newCID;
+    clientList.push_back(p);
     
+    return 1;
+}
+
+int client::removeUser(int CID){
+    unsigned int i=0;
+    for (i=0; i<clientList.size(); i++) {
+        if(clientList[i].c_id==CID){
+            clientList.erase(clientList.begin()+i);
+            break;
+        }
+    }
     return 1;
 }
 
