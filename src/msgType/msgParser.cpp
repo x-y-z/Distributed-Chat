@@ -107,6 +107,10 @@ msgType msgParser::msgTypeIs()
 
 int msgParser::senderInfo(string &ip, int &port, int &id)
 {
+    if (init == false)
+        return -1;
+
+
     ip.assign(_content.ip);
     port = _content.port;
     id = _content.self_id;
@@ -116,7 +120,7 @@ int msgParser::senderInfo(string &ip, int &port, int &id)
 
 int msgParser::joinName(string &name)
 {
-    if (msgTypeIs() != join || msgTypeIs() != join_broadcast)
+    if (msgTypeIs() != join && msgTypeIs() != join_broadcast)
     {
         return -1;
     }

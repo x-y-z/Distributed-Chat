@@ -154,7 +154,7 @@ myMsg msgMaker::makeLeave()
     return tmp;
 }
 
-myMsg msgMaker::makeLeaveBCase()
+myMsg msgMaker::makeLeaveBCast()
 {
     myMsg tmp;
     memset(&tmp, 0, sizeof(myMsg));

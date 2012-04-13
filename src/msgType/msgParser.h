@@ -12,6 +12,7 @@
 
 #include <string>
 #include <vector>
+#include <ostream>
 
 using namespace std;
 
@@ -50,6 +51,37 @@ enum msgType{
     election_ok,
     msgError
 };
+ 
+inline ostream& operator<<(ostream &o, const msgType &n)
+{
+    switch(n)
+    {
+        case join:
+            return o<<"Join";
+        case navi:
+            return o<<"Navi";
+        case join_ack:
+            return o<<"Join-ACK";
+        case join_broadcast:
+            return o<<"Join-Broadcast";
+        case leave:
+            return o<<"Leave";
+        case leave_broadcast:
+            return o<<"Leave-Broadcast";
+        case msg:
+            return o<<"Message";
+        case msg_broadcast:
+            return o<<"Message-Broadcast";
+        case election_req:
+            return o<<"Election-Request";
+        case election_ok:
+            return o<<"Election-OK";
+        case msgError:
+            return o<<"Msg Error";
+        default:
+            return o<<"invalid value";
+    }
+}
 
 class msgParser
 {

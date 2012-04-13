@@ -64,7 +64,7 @@ public:
     myMsg makeJoinACK(int msgMaxCnt, int c_id, const vector<peer> &peerlist);
     myMsg makeJoinBCast(const string &name);
     myMsg makeLeave();
-    myMsg makeLeaveBCase();
+    myMsg makeLeaveBCast();
     myMsg makeMsg(const char *msgCnt, int msgLen);
     myMsg makeMsgBCast(const char *msgCnt, int msgLen, int seq_num);
     myMsg makeElec();
