@@ -16,7 +16,7 @@
 
 using namespace std;
 
-#define DEFUAL_CLIENT_CAPACITY 100
+#define DEFAULT_CLIENT_CAPACITY 100
 
 typedef struct neighbor{
     char name[50],IP[20];
@@ -29,7 +29,7 @@ private:
     string IP, name, s_ip;
     int port, C_ID, s_port, reSendCount;
     myMsg msgToSend;
-    vector<peer> clientList(DEFUAL_CLIENT_CAPACITY); 
+    vector<peer> clientList(DEFAULT_CLIENT_CAPACITY); 
 public:
     client(string name, string IP, int port);
     ~client(){};
