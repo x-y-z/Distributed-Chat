@@ -19,33 +19,54 @@
 
 #include "msgParser.h"
 #include <string>
+#include <cstring>
 
 using namespace std;
+
 
 class msgMaker
 {
 private:
     string _ip;
+    string _name;
     int _port;
     int _self_id;
 public:
-    msgMaker(const string &ip, const int &port, const int &id)
+    msgMaker(){};
+    ~msgMaker(){};
+public:
+    static void serlize(string &outMsg, int &outLen, const myMsg &inMsg)
+    {
+    char *tmpMsg;
+    outLen = sizeof(myMsg) - sizeof(char *) + inMsg.msgLen;
+
+    tmpMsg = new char[outLen];
+
+    strncpy(tmpMsg, (char*)&inMsg, sizeof(myMsg) - sizeof(char *));
+
+    strncpy(tmpMsg + sizeof(myMsg) - sizeof(char*), inMsg.msgContent, 
+            inMsg.msgLen);
+    
+    outMsg.assign(tmpMsg, outLen);
+    }
+public:
+    void setInfo(const string &name, const string &ip, 
+             const int &port, const int &id)
     {
         _ip = ip;
         _port = port;
         _self_id = id;
+        _name = name;
     }
-    ~msgMaker(){};
-public:
     myMsg makeACK();
-    myMsg makeJoin();
-    
-    myMsg makeJoinACK();
-    myMsg makeJoinBCast();
+    myMsg makeJoin(string &name);
+    myMsg makeNavi(); 
+    myMsg makeJoinACK(int msgMaxCnt, int c_id, const vector<peer> &peerlist);
+    myMsg makeJoinBCast(string &name);
     myMsg makeLeave();
     myMsg makeLeaveBCase();
     myMsg makeMsg(const char *msgCnt, int msgLen);
-    myMsg makeMsgBCast(const char *msgCnt, int msgLen);
+    myMsg makeMsgBCast(const char *msgCnt, int msgLen, int seq_num);
     myMsg makeElec();
     myMsg makeElecOK();
 };

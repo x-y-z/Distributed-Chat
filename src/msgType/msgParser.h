@@ -1,5 +1,5 @@
 //
-//  myMsg.h
+//  
 //
 //  This is the structure for the message used in the distributed chat program.
 //
@@ -22,10 +22,10 @@ typedef struct neighbor{
 
 typedef struct messageStruct {
     int sendORrev;//0 for send, 1 for ACK
-    int chat;//0 for Join, 1 for ACK-Join, 2 for Join-broadcast, 
-             //3 for Leave, 4 for Leave-broadcast, 
-             //5 for MSG, 6 for MSG-broadcast, 
-             //7 for election request, 8 for election OK.
+    int chat;//0 for Join, 1 for navi 2 for ACK-Join, 3 for Join-broadcast, 
+             //4 for Leave, 5 for Leave-broadcast, 
+             //6 for MSG, 7 for MSG-broadcast, 
+             //8 for election request, 9 for election OK.
     char ip[20];
     int port;
     int self_id;
