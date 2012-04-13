@@ -29,6 +29,9 @@ private:
     string my_name[50];
     int my_port;
     vector<peer> clientList(DEFAULT_CLIENT_CAPACITY);
+
+private:
+    int msg_seq_id;
 public:
     sequencer(const char* name, const char*ip, int port);
     ~sequencer(){};

@@ -18,10 +18,6 @@ using namespace std;
 
 #define DEFAULT_CLIENT_CAPACITY 100
 
-typedef struct neighbor{
-    char name[50],IP[20];
-    int port,C_ID;
-} peer;
 
 class client
 {

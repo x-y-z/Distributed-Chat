@@ -18,23 +18,36 @@
 #define __MSG_MAKER_H__
 
 #include "msgParser.h"
+#include <string>
+
+using namespace std;
 
 class msgMaker
 {
+private:
+    string _ip;
+    int _port;
+    int _self_id;
 public:
-    msgMaker(){};
+    msgMaker(const string &ip, const int &port, const int &id)
+    {
+        _ip = ip;
+        _port = port;
+        _self_id = id;
+    }
     ~msgMaker(){};
 public:
-    static myMsg makeACK();
-    static myMsg makeJoin();
-    static myMsg makeJoinACK();
-    static myMsg makeJoinBCast();
-    static myMsg makeLeave();
-    static myMsg makeLeaveBCase();
-    static myMsg makeMsg(const char *msgCnt, int msgLen);
-    static myMsg makeMsgBCast(const char *msgCnt, int msgLen);
-    static myMsg makeElec();
-    static myMsg makeElecOK();
+    myMsg makeACK();
+    myMsg makeJoin();
+    
+    myMsg makeJoinACK();
+    myMsg makeJoinBCast();
+    myMsg makeLeave();
+    myMsg makeLeaveBCase();
+    myMsg makeMsg(const char *msgCnt, int msgLen);
+    myMsg makeMsgBCast(const char *msgCnt, int msgLen);
+    myMsg makeElec();
+    myMsg makeElecOK();
 };
 
 
