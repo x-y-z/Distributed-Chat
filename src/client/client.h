@@ -11,6 +11,10 @@
 
 #include "../msgType/msgMaker.h"
 #include "../msgType/msgParser.h"
+#include <vector>
+#include <string>
+
+using namespace std;
 
 #define DEFAULT_CLIENT_CAPACITY 100
 
@@ -22,21 +26,21 @@ typedef struct neighbor{
 class client
 {
 private:
-    const char* IP, name, s_ip;
+    string IP, name, s_ip;
     int port, C_ID, s_port, reSendCount;
     myMsg msgToSend;
     vector<peer> clientList(DEFAULT_CLIENT_CAPACITY); 
 public:
-    client(const char* name, const char* IP, int port);
+    client(string name, string IP, int port);
     ~client(){};
 
 public:
     int processMSG(myMsg msg);
     
 private:
-    int join(const char* s_ip, int s_port);
-    int sendBroadcastMsg(const char* msgContent);
-    int addNewUser(const char* name, const char* newCIP, int newCPort, int newCID);
+    int join(string s_ip, int s_port);
+    int sendBroadcastMsg(string msgContent);
+    int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);
     void setCID(int ID);
     void doElection(myMsg msg);
