@@ -8,14 +8,15 @@
 
 #include <iostream>
 
-#include "client.h"
 #include "../udp/udp.h"
+#include "client.h"
 
+#include <signal.h>
 #include <string>
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <signal.h>
+
 
 using namespace std;
 
@@ -36,7 +37,13 @@ using namespace std;
 //    }
 //}
 
-client::client(char* name, const char* IP, int port){
+client::client(string cname, string cIP,int cport){
+    name = cname;
+    IP = cIP;
+    port = cport;
+    C_ID = -1;
+    s_port = -1;
+    reSendCount = 0;
     
 }
 
@@ -48,11 +55,11 @@ int client::processMSG(myMsg msg)
     }
     else{
         switch (parser.msgTypeIs()) {
-//            case navi:
-//                //the client get a Join message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
-//                //get the info of the sequencer and send another join message to it.
-//                
-//                break;
+            case navi:
+                //the client get a navi message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
+                //get the info of the sequencer and send another join message to it.
+                join(msg.ip, msg.port);//use message structure directly.
+                break;
             case join_ack:
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 break;
@@ -79,14 +86,27 @@ int client::processMSG(myMsg msg)
     }
 }
 
-int client::join(const char* s_ip, int s_port){
+int client::join(string s_ip, int s_port){
     //setupt the UDP socket
     struct sockaddr_in saddr;
     int saddr_len = 0;
-    saddr = UDP::fromAddrToSock(s_ip,port);
+    saddr = UDP::fromAddrToSock(s_ip.c_str(),port);
     saddr_len = sizeof(saddr);
     UDP client(saddr);
     
-    msgMaker mmaker();
-    myMsg message = mmaker.makeJoin();
+    //args: sequencer's ip, port, myIP, myPort,myName;
+//    myMsg message = mmaker.makeJoin(s_ip, s_port,IP,port,name);
+//    char[100] temp = (char) message;
+//    client.sendTo(temp,sizeof(temp),saddr,saddr_len);
+    return 1;
 }
+
+int sendBroadcastMsg(string msgContent){
+    
+    myMsg message = mmaker.makeMsg(msgContent.c_str(),msgContent.size());
+    //char temp = (char) message;
+    
+    return 1;
+}
+
+
