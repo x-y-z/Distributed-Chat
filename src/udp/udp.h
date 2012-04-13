@@ -35,10 +35,11 @@ public:
 
 public:
     static struct sockaddr_in fromAddrToSock(const char *host, const int port);
+    void setRemoteAddr(const char *host, int port);
 private:
     void setListenPort(int port);
     void setRemoteAddr(struct sockaddr_in addr);
-    void setRemoteAddr(const char *host, int port);
+    
 
     //int close(){};
 public:

@@ -15,9 +15,13 @@
 
 using namespace std;
 
+
+
 typedef struct neighbor{
-    char name[50],IP[20];
-    int port,C_ID;
+    char name[50];
+    char ip[20];
+    int port;
+    int c_id;
 } peer;
 
 typedef struct messageStruct {
