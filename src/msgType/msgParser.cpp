@@ -14,7 +14,9 @@
 // 
 // ===================================================================
 #include "msgParser.h"
+#include <assert.h>
 #include <cstring>
+
 
 msgParser::msgParser(const char *msg, int len)
 {
@@ -127,6 +129,7 @@ int msgParser::joinFeedback(int &msgMaxCnt, int &my_id, vector<peer> &peerlist)
 {
     int peerNum = 0;
     peer *pList;
+    peer a;
     
     msgMaxCnt = *((int *)_content.msgContent);
     my_id =  *(((int *)_content.msgContent) + 1);
@@ -136,7 +139,7 @@ int msgParser::joinFeedback(int &msgMaxCnt, int &my_id, vector<peer> &peerlist)
 
     for (int i = 0; i < peerNum; ++i)
     {
-        peerlist.insert(pList[i]);
+        peerlist.push_back(pList[i]);
     }
 
     return 0;
