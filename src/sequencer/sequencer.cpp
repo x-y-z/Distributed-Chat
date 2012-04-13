@@ -14,3 +14,18 @@
 // 
 // ===================================================================
 #include "sequencer.h"
+
+
+sequencer::sequencer(const char* name, const char*ip, int port)
+{
+    my_name.assign(name);
+    my_ip.assign(ip);
+    my_port = port;
+}
+
+int sequencer::processMSG(myMsg msg)
+{
+    :
+
+}
+

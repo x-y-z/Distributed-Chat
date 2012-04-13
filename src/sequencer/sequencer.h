@@ -16,10 +16,24 @@
 #ifndef __SEQUENCER_H__
 #define __SEQUENCER_H__
 
+#include <string>
+
+#include "../client/client.h"
+
+using namespace std;
 
 class sequencer
 {
-
+private:
+    string my_ip;
+    string my_name[50];
+    int my_port;
+    vector<peer> clientList(DEFAULT_CLIENT_CAPACITY);
+public:
+    sequencer(const char* name, const char*ip, int port);
+    ~sequencer(){};
+public:
+    int processMSG(myMsg msg);
 };
 
 
