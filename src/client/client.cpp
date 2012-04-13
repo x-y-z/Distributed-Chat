@@ -7,8 +7,11 @@
 //
 
 #include <iostream>
-#include <string>
+
 #include "client.h"
+#include "../udp/udp.h"
+
+#include <string>
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -33,45 +36,57 @@ using namespace std;
 //    }
 //}
 
+client::client(char* name, const char* IP, int port){
+    
+}
+
 int client::processMSG(myMsg msg)
 {
-    msgParser parser = new msgParser(msg);
+    msgParser parser(msg);
     if(parser.isACK()){
         alarm(0); 
     }
     else{
         switch (parser.msgTypeIs()) {
-            case join:
-                //the client get a Join message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
-                char getMsg[256];
-                int msgLen;
-                parser.msgContent(getMsg, msgLen);
-                string content(getMsg, msgLen);
-                
-                break;
+//            case navi:
+//                //the client get a Join message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
+//                //get the info of the sequencer and send another join message to it.
+//                
+//                break;
             case join_ack:
-                
+                //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 break;
                 
             case join_broadcast:
-                break;
-            case leave:
+                //get the ip ,port name and client ID of the new user and store them locally. 
                 break;
             case leave_broadcast:
-                break;
-            case msg:
+                //remove the specific user from the peer list
                 break;
             case msg_broadcast:
+                //show the message to the standard output
                 break;
             case election_req:
+                //do BULLY
                 break;
             case election_ok:
-                break;
-            case msgError:
+                //do BULLY
                 break;
                 
-            default:
+            default: //not used here.
                 break;
         }
     }
+}
+
+int client::join(const char* s_ip, int s_port){
+    //setupt the UDP socket
+    struct sockaddr_in saddr;
+    int saddr_len = 0;
+    saddr = UDP::fromAddrToSock(s_ip,port);
+    saddr_len = sizeof(saddr);
+    UDP client(saddr);
+    
+    msgMaker mmaker();
+    myMsg message = mmaker.makeJoin();
 }
