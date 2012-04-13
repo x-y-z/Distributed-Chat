@@ -9,8 +9,8 @@
 #ifndef _CLIENT_H
 #define _CLIENT_H
 
-#include "msgMaker.h"
-#include "msgParser.h"
+#include "../msgType/msgMaker.h"
+#include "../msgType/msgParser.h"
 
 #define DEFUAL_CLIENT_CAPACITY 100
 
@@ -18,21 +18,24 @@ class client
 {
 private:
     const char* IP, name, s_ip;
-    int port, C_ID, s_port;
+    int port, C_ID, s_port, reSendCount;
+    myMsg msgToSend;
     vector<client> clientList(DEFUAL_CLIENT_CAPACITY); 
 public:
-    client(const char* name, const char* IP, int port){};
+    client(const char* name, const char* IP, int port);
     ~client(){};
 
 public:
-    int join(const char* s_ip, int s_port){};
-    int sendBroadcastMsg(const char* msgContent){};
-    int addNewUser(const char* name, const char* newCIP, int newCPort, int newCID){};
-    int removeUser(int CID);
+    int processMSG(myMsg msg);
     
 private:
-    void setCID(int ID){};
-    void doElection(myMsg msg){};
+    int join(const char* s_ip, int s_port);
+    int sendBroadcastMsg(const char* msgContent);
+    int addNewUser(const char* name, const char* newCIP, int newCPort, int newCID);
+    int removeUser(int CID);
+    void setCID(int ID);
+    void doElection(myMsg msg);
+    void resend();
     
 }
 
