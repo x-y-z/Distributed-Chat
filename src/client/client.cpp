@@ -7,8 +7,10 @@
 //
 
 #include <iostream>
-#include <string>
+
 #include "client.h"
+#include "udp.h"
+#include <string>
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -41,19 +43,17 @@ int client::processMSG(myMsg msg)
     }
     else{
         switch (parser.msgTypeIs()) {
-            case join:
+            case navi:
                 //the client get a Join message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
-                char getMsg[256];
-                int msgLen;
-                parser.msgContent(getMsg, msgLen);
-                string content(getMsg, msgLen);
+                //get the info of the sequencer and send another join message to it.
                 
                 break;
             case join_ack:
-                
+                //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 break;
                 
             case join_broadcast:
+                //get the ip ,port and client ID of the new user and store them locally. 
                 break;
             case leave:
                 break;
