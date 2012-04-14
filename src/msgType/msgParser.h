@@ -30,7 +30,7 @@ typedef struct messageStruct {
     int chat;//0 for Join, 1 for navi 2 for ACK-Join, 3 for Join-broadcast, 
              //4 for Leave, 5 for Leave-broadcast, 
              //6 for MSG, 7 for MSG-broadcast, 
-             //8 for election request, 9 for election OK.
+             //8 for election request, 9 for election OK, 10 leader broadcast.
     char ip[20];
     int port;
     int self_id;

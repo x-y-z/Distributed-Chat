@@ -69,6 +69,7 @@ public:
     myMsg makeMsgBCast(const char *msgCnt, int msgLen, int seq_num);
     myMsg makeElec();
     myMsg makeElecOK();
+    myMsg makeLeader(){myMsg a; return a;};
 };
 
 
