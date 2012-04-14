@@ -24,7 +24,7 @@ class client
 private:
     string name, s_ip;
     string IP;
-    int port, C_ID;
+    int port, C_ID, msgMaxCnt;
     int  s_port, reSendCount;
     myMsg msgToSend;
     msgMaker mmaker;//set up necassary info by calling the "setInfo" function
@@ -36,15 +36,14 @@ public:
     ~client(){};
 
 public:
-    int processMSG(myMsg msg);
+    int processMSG(const char* msg, int mlen);
     
 private:
     int join(string s_ip, int s_port);
     int sendBroadcastMsg(string msgContent);
     int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);
-    void setCID(int ID);
-    void doElection(myMsg msg);
+    void doElection();
     void resend();
     
 };

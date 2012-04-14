@@ -44,7 +44,7 @@ private:
 
     //int close(){};
 public:
-    int sendTo(void *msg, size_t size, 
+    int sendTo(const void *msg, size_t size, 
                const struct sockaddr *dest, socklen_t dest_len);
     int recvFrom(void *msg, size_t size,
                struct sockaddr *src, socklen_t *src_len);
