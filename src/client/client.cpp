@@ -44,12 +44,18 @@ client::client(string cname, string cIP,int cport){
     C_ID = -1;
     s_port = -1;
     reSendCount = 0;
+    mmaker.setInfo(cname,cIP, cport,C_ID);
     
 }
 
-int client::processMSG(myMsg msg)
+int client::processMSG(const char* msg, int mlen)
 {
-    msgParser parser(msg);
+    peer newUser;
+    string newName, newIP, textmsg;
+    int newPort, newID;
+    int i;
+    vector<peer>::iterator aIter;
+    msgParser parser(msg, mlen);
     if(parser.isACK()){
         alarm(0); 
     }
@@ -58,23 +64,49 @@ int client::processMSG(myMsg msg)
             case navi:
                 //the client get a navi message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
                 //get the info of the sequencer and send another join message to it.
-                join(msg.ip, msg.port);//use message structure directly.
+                parser.senderInfo(newIP,newPort,newID);
+                join(newIP, newPort);//use message structure directly.
                 break;
             case join_ack:
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
+                parser.joinFeedback(msgMaxCnt, C_ID, clientList);
+                mmaker.setInfo(name,IP, port,C_ID);
                 break;
                 
             case join_broadcast:
-                //get the ip ,port name and client ID of the new user and store them locally. 
+                //get the ip ,port name and client ID of the new user and store them locally.
+                
+                parser.senderInfo(newIP,newPort, newID);
+                parser.joinName(newName);
+                memcpy(newUser.name,newName.c_str(),newName.size());
+                memcpy(newUser.ip, newIP.c_str(), newIP.size());
+                newUser.c_id = newID;
+                newUser.port = newPort;
+                clientList.push_back(newUser);
                 break;
             case leave_broadcast:
                 //remove the specific user from the peer list
+                parser.senderInfo(newIP,newPort,newID);
+                
+                for(aIter = clientList.begin(); aIter != clientList.end(); aIter++){
+                    if((*aIter).c_id==newID){
+                        clientList.erase(aIter);
+                        break;
+                    }
+                    
+                }
                 break;
             case msg_broadcast:
                 //show the message to the standard output
+                parser.getMsg(textmsg);
+                cout<<textmsg<<endl;
                 break;
             case election_req:
                 //do BULLY
+                parser.senderInfo(newIP,newPort,newID);
+                if(C_ID>newID){
+                    doElection();
+                }
                 break;
             case election_ok:
                 //do BULLY
@@ -87,13 +119,17 @@ int client::processMSG(myMsg msg)
 }
 
 int client::join(string s_ip, int s_port){
+    string outmsg;
+    int outlen, saddr_len;
+    struct sockaddr_in saddr= clntUDP.fromAddrToSock(s_ip.c_str(), s_port);
+    saddr_len = sizeof(saddr);
     //setupt the UDP socket
     clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
     
     //args: sequencer's ip, port, myIP, myPort,myName;
-//    myMsg message = mmaker.makeJoin(s_ip, s_port,IP,port,name);
-//    char[100] temp = (char) message;
-//    clnt.sendTo(temp,sizeof(temp),saddr,saddr_len);
+    myMsg message = mmaker.makeJoin(name);
+    msgMaker::serlize(outmsg, outlen, message);
+    clntUDP.sendTo(outmsg.c_str(),outlen, (struct sockaddr *)&saddr, saddr_len);
     return 1;
 }
 
@@ -127,4 +163,6 @@ int client::removeUser(int CID){
     return 1;
 }
 
-
+void client::doElection(){
+    
+}
