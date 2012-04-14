@@ -29,6 +29,7 @@ enum udp_state
 class UDP
 {
 public:
+    UDP():_socket(0){};
     UDP(int port);//server
     UDP(struct sockaddr_in addr);//client
     ~UDP(){ closesocket(_socket);};
@@ -50,10 +51,10 @@ public:
 
 private:
     udp_type _type;//0--client, 1--server
-    udp_state _state;
+//    udp_state _state;
     SOCKET _socket;
-    struct sockaddr_in _addr;
-    struct sockaddr_in _client;
+    struct sockaddr_in _my_addr;
+    struct sockaddr_in _remote;
 };
 
 

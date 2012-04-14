@@ -8,10 +8,10 @@ UDP::UDP(int port)
 
     _type = server;
 
-    memset((char *)&_addr, 0, sizeof(_addr));
-    _addr.sin_port = htons((u_short)port);
-    _addr.sin_family = AF_INET;
-    _addr.sin_addr.s_addr = INADDR_ANY;
+    memset((char *)&_my_addr, 0, sizeof(_my_addr));
+    _my_addr.sin_port = htons((u_short)port);
+    _my_addr.sin_family = AF_INET;
+    _my_addr.sin_addr.s_addr = INADDR_ANY;
 
     ptrp = getprotobyname("udp");
     if (ptrp == 0)
@@ -27,7 +27,7 @@ UDP::UDP(int port)
         exit(1);
     }
 
-    if (bind(_socket, (struct sockaddr *)&_addr, sizeof(_addr)) < 0)
+    if (bind(_socket, (struct sockaddr *)&_my_addr, sizeof(_my_addr)) < 0)
     {
         std::cerr<<"bind failed\n";
         exit(1);
@@ -89,18 +89,48 @@ void UDP::setRemoteAddr(struct sockaddr_in addr)
 
 void UDP::setRemoteAddr(const char *host, int port)
 {
+    _remote = fromAddrToSock(host, port);
+    struct protoent *ptrp;
+    
+    _type = client;
+
+    ptrp = getprotobyname("udp");
+    if (ptrp == 0)
+    {
+        std::cerr<<"cannot map \"udp\" to protocol number\n";
+        exit(1);
+    }
+
+    _socket = socket(PF_INET, SOCK_DGRAM, ptrp->p_proto);
+    if (_socket < 0)
+    {
+        std::cerr<<"socket creation failed\n";
+        exit(1);
+    }
 
 }
 
 int UDP::sendTo(void *msg, size_t size,
                 const struct sockaddr *dest, socklen_t dest_len)
 {
+    if (_socket == 0)
+    {
+        std::cerr<<"sendTo: socket not initialized\n";
+        return -1;
+    }
+
     return sendto(_socket, msg, size, 0, dest, dest_len);
 }
 
 int UDP::recvFrom(void *msg, size_t size,
                   struct sockaddr *src, socklen_t *src_len)
 {
+    if (_socket == 0)
+    {
+        std::cerr<<"recvFrom: socket not initialized\n";
+        return -1;
+    }
+
     return recvfrom(_socket, msg, size, 0, src, src_len);
 }
 
