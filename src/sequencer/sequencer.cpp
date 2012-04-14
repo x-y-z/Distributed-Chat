@@ -124,40 +124,83 @@ int sequencer::sendJoinACK(const string &ip, int port, int id, int msgMaxCnt)
     _udp.setRemoteAddr(ip.c_str(), port);
     _udp.sendTo(aMsg.c_str(), aMsg.size());
 
-    char gMsg[1024];
-    int msgLen;
-    int finished = -1;
+    int waitRes = waitForACK(aMsg, id);
 
-    while (!finished)
-    {
-        msgLen = _udp.recvFrom(gMsg, 1024);
-        msgParser aParser(gMsg, msgLen);
-        if (!aParser.isACK())
-        {
-            string tmp(gMsg, msgLen);
-            _MsgQ.push_back(tmp);
-        }
-        else
-        {
-            finished = 1;
-        }
+    if (waitRes == 2)//lost remote
+        findAndDeletePeer(id);
+}
 
-        if (msgLen < 0)
-        {
-            //time out
-            if (finished == -1)
-            {
-                _udp.sendTo(aMsg.c_str(), aMsg.size());
-                finished++;
-            }
-            else
-            {
-                //lose remote
-                findAndDeletePeer(id);
-                finished = 1;
-            }
-        }
-    }
+
+int sequencer::sendJoinBCast(const string &ip, int port, int id, 
+        const string &name)
+{
+
 
 }
 
+
+int sequencer::findAndDeletePeer(int id)
+{
+
+}
+
+
+int sequencer::sendLeaveBCast(const string &ip, int port, int id)
+{
+
+}
+
+
+int sequencer::putMsgInQ(const string &ip, int port, int id, const string &msg)
+{
+
+}
+
+int sequencer::sendMsgBCast()
+{
+
+}
+
+void sequencer::waitForACK(const string &aMsg, int id)
+{
+        char gMsg[1024];
+        int msgLen;
+        int finished = -1;
+
+        while (!finished)
+        {
+            msgLen = _udp.recvFrom(gMsg, 1024);
+            if (msgLen > 0)
+            {
+                msgParser aParser(gMsg, msgLen);
+                if (!aParser.isACK())
+                {
+                    //string tmp(gMsg, msgLen);
+                    //_MsgQ.push_back(tmp);
+                    std::cerr<<"wait for ack, but get unexpected msg\n";
+                    exit(1);
+                    finished = 3;
+                }
+                else
+                {
+                    finished = 1;//ACK recved
+                }
+            }
+            else //if (msgLen < 0)
+            {
+                //time out
+                if (finished == -1)
+                {
+                    _udp.sendTo(aMsg.c_str(), aMsg.size());
+                    finished++;
+                }
+                else
+                {
+                    //lose remote
+                    finished = 2;//remote lost
+                }
+            }
+        }
+
+    return finished;
+}

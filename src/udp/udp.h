@@ -51,6 +51,9 @@ public:
     int sendTo(const void *msg, size_t size);
     int recvFrom(void *msg, size_t size);
 
+    int recvFromTimeout(void *msg, size_t size);
+
+    int recvFromTimeout(void *msg, size_t size, int timeout);
 private:
     udp_type _type;//0--client, 1--server
 //    udp_state _state;

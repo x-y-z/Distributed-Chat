@@ -149,3 +149,31 @@ int UDP::recvFrom(void *msg, size_t size)
 
 }
 
+int UDP::recvFromTimeout(void *msg, size_t size)
+{
+    return recvFromTimeout(msg, size, 3);
+}
+
+int UDP::recvFromTimeout(void *msg, size_t size, int timeout)
+{
+    struct timeval tv;
+
+    tv.tv_sec = timeout;  /*  30 Secs Timeout */
+    tv.tv_usec = 0;
+
+    if(setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO,
+               (struct timeval *)&tv,sizeof(struct timeval)))
+    {
+        std::cerr<<"setsockopt error";        
+        return -1;
+    }
+    
+    int recvRet = recvFrom(msg, size);
+    
+    if (recvRet == -1)
+    {
+
+    }
+
+}
+
