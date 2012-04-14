@@ -44,10 +44,12 @@ private:
 
     //int close(){};
 public:
-    int sendTo(void *msg, size_t size, 
+    int sendTo(const void *msg, size_t size, 
                const struct sockaddr *dest, socklen_t dest_len);
     int recvFrom(void *msg, size_t size,
                struct sockaddr *src, socklen_t *src_len);
+    int sendTo(const void *msg, size_t size);
+    int recvFrom(void *msg, size_t size);
 
 private:
     udp_type _type;//0--client, 1--server
@@ -55,6 +57,7 @@ private:
     SOCKET _socket;
     struct sockaddr_in _my_addr;
     struct sockaddr_in _remote;
+    int _r_len;
 };
 
 

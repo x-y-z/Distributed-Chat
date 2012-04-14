@@ -40,6 +40,8 @@ UDP::UDP(struct sockaddr_in addr)
     struct protoent *ptrp;
     
     _type = client;
+    _remote = addr;
+    _r_len = sizeof(_remote);
 
     ptrp = getprotobyname("udp");
     if (ptrp == 0)
@@ -90,6 +92,7 @@ void UDP::setRemoteAddr(struct sockaddr_in addr)
 void UDP::setRemoteAddr(const char *host, int port)
 {
     _remote = fromAddrToSock(host, port);
+    _r_len = sizeof(_remote);
     struct protoent *ptrp;
     
     _type = client;
@@ -110,7 +113,7 @@ void UDP::setRemoteAddr(const char *host, int port)
 
 }
 
-int UDP::sendTo(void *msg, size_t size,
+int UDP::sendTo(const void *msg, size_t size,
                 const struct sockaddr *dest, socklen_t dest_len)
 {
     if (_socket == 0)
@@ -120,6 +123,11 @@ int UDP::sendTo(void *msg, size_t size,
     }
 
     return sendto(_socket, msg, size, 0, dest, dest_len);
+}
+
+int UDP::sendTo(const void *msg, size_t size)
+{
+    return sendTo(msg, size,(struct sockaddr *)&_remote, _r_len);
 }
 
 int UDP::recvFrom(void *msg, size_t size,
@@ -132,5 +140,12 @@ int UDP::recvFrom(void *msg, size_t size,
     }
 
     return recvfrom(_socket, msg, size, 0, src, src_len);
+}
+
+int UDP::recvFrom(void *msg, size_t size)
+{
+   return recvFrom(msg, size, (struct sockaddr *)&_remote, 
+                   (socklen_t*)&_r_len); 
+
 }
 
