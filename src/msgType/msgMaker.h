@@ -35,7 +35,7 @@ public:
     msgMaker(){};
     ~msgMaker(){};
 public:
-    static void serlize(string &outMsg, int &outLen, const myMsg &inMsg)
+    static void serialize(string &outMsg, int &outLen, const myMsg &inMsg)
     {
     char *tmpMsg;
     outLen = sizeof(myMsg) - sizeof(char *) + inMsg.msgLen;
