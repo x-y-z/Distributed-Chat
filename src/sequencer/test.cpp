@@ -14,9 +14,20 @@
 // 
 // ===================================================================
 #include "sequencer.h"
+#include <string>
+
+using namespace std;
 
 int main()
 {
     sequencer aSeq("yanzi", "127.0.0.1", 4567);
+    string aMsg;
+    int amLen;
+    msgMaker aMaker;
+
+    aMaker.setInfo("yanzi", "127.0.0.1", 1234, 9999);
+    msgMaker::serialize(aMsg, amLen, aMaker.makeJoin("yanzi"));
+
+    aSeq.processMSG(aMsg.c_str(), aMsg.size());
 }
 

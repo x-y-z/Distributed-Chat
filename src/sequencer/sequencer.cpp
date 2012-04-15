@@ -30,6 +30,7 @@ sequencer::sequencer(const char* name, const char*ip, int port)
 int sequencer::processMSG(const char *inMsg, int mlen)
 {
     msgParser aParser(inMsg, mlen);
+    int status = 0;
 
     switch (aParser.msgTypeIs())
     {
@@ -43,11 +44,16 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 //add to client list
                 addToClientList(name, ip, port, id);
                 //send join ack
-                int msgMaxCnt = getMsgMaxCnt();
+                int msgMaxCnt = getMsgCurCnt();
                 int sendRes = sendJoinACK(ip, port, id, msgMaxCnt);
                 //broadcast join
                 if (sendRes == 0)
+                {
                     sendJoinBCast(ip, port, id, name);
+                    status = 0;
+                }
+                else
+                    status = -1;
             }
             break;
         case leave:
@@ -58,7 +64,15 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 //remove from client list
                 findAndDeletePeer(id);
                 //send leave broadcast
-                sendLeaveBCast(ip, port, id);
+                int sendRes = sendLeaveBCast(ip, port, id);
+                if (sendRes == 0)
+                {
+                    status = 0;
+                }
+                else
+                {
+                    status = -1;
+                }
             }
             break;
         case msg:
@@ -71,20 +85,29 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 aParser.getMsg(recvMsg);
                 //put into local msg queue
                 putMsgInQ(ip, port, id, recvMsg);
-                sendMsgBCast();
+                int sendRes = sendMsgBCast();
+                if (sendRes == 0)
+                {
+                    status = 0;
+                }
+                else
+                {
+                    status = -1;
+                }
             }
             break;
         case election_req:
             {
                 std::cerr<<"Unexpected election, ignored!\n";
+                status = -2;
             }
             break;
         default:
-            return -1;
+            status = -2;
             break;
     }
 
-    return -1;
+    return status;
 
 }
 
@@ -107,6 +130,8 @@ int sequencer::addToClientList(const string &name, const string &ip,
     memcpy(newPeer.ip, ip.c_str(), ip.size());
     newPeer.port = port;
     newPeer.c_id = id;
+
+    clientList.push_back(newPeer);
 
     return 0;
     
@@ -138,30 +163,128 @@ int sequencer::sendJoinACK(const string &ip, int port, int id, int msgMaxCnt)
 int sequencer::sendJoinBCast(const string &ip, int port, int id, 
         const string &name)
 {
+    msgMaker aMaker;
+    aMaker.setInfo(name, ip, port, id);
+    
+    string aMsg;
+    int aMsg_len;
+    msgMaker::serialize(aMsg, aMsg_len, 
+                        aMaker.makeJoinBCast(name));
 
+    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+                                    clientList);
+    if (timeoutList.size() == 0)
+        return 0;
+    else
+    {
+        vector<peer>::iterator iter;
+        for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
+        {
+            findAndDeletePeer((*iter).c_id);
+        }
 
+        return -1;
+    }
+
+    return -2;
 }
 
 
 int sequencer::findAndDeletePeer(int id)
 {
+    vector<peer>::iterator iter;
+
+    for (iter = clientList.begin(); iter != clientList.end(); iter++)
+    {
+        if ((*iter).c_id == id)
+        {
+            clientList.erase(iter);
+            return 0;
+        }
+    }
+
+    return -1;//not found
 
 }
 
 
 int sequencer::sendLeaveBCast(const string &ip, int port, int id)
 {
+    string name("");
+    msgMaker aMaker;
+    
+    vector<peer>::iterator iter;
+    for (iter = clientList.begin(); iter != clientList.end(); iter++)
+    {
+        if ((*iter).c_id == id)
+            name = (*iter).name;
+    }
+
+    if (name.empty())
+        return -1;
+    
+    aMaker.setInfo(name, ip, port, id);
+
+    string aMsg;
+    int aMsg_len;
+    msgMaker::serialize(aMsg, aMsg_len, 
+                        aMaker.makeLeaveBCast());
+
+    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+                                    clientList);
+    if (timeoutList.size() == 0)
+        return 0;
+    else
+    {
+        for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
+        {
+            findAndDeletePeer((*iter).c_id);
+        }
+
+        return -1;
+    }
+
+    return -2;
 
 }
 
 
 int sequencer::putMsgInQ(const string &ip, int port, int id, const string &msg)
 {
-
+    _MsgQ.push_back(msg);
 }
 
 int sequencer::sendMsgBCast()
 {
+    //remember to add msg_seq_num
+    int msgGlobalNum = nextMsgCnt();
+    string bMsg = _MsgQ.front();
+    _MsgQ.pop_front();
+
+    msgMaker aMaker;
+    aMaker.setInfo(my_name, my_ip, my_port, my_id);
+    
+    string aMsg;
+    int aMsg_len;
+    msgMaker::serialize(aMsg, aMsg_len, 
+                        aMaker.makeMsgBCast(bMsg.c_str(), bMsg.size(),
+                                            msgGlobalNum));
+
+    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+                                    clientList);
+    if (timeoutList.size() == 0)
+        return 0;
+    else
+    {
+        vector<peer>::iterator iter;
+        for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
+        {
+            findAndDeletePeer((*iter).c_id);
+        }
+
+        return -1;
+    }
+
 
 }
 

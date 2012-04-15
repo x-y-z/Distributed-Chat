@@ -38,14 +38,14 @@ int main()
 
     aMaker.setInfo("yanzi", "127.0.0.1", 1234, 9999);
 
-    aMsg = aMaker.makeACK();
+    //aMsg = aMaker.makeACK();
     //aMsg = aMaker.makeJoin("mm");
     //aMsg = aMaker.makeNavi();
     //aMsg = aMaker.makeJoinACK(34, 99, aList);
     //aMsg = aMaker.makeLeave();
     //aMsg = aMaker.makeLeaveBCast();
     //aMsg = aMaker.makeMsg("ni hao ma", 9);
-    //aMsg = aMaker.makeMsgBCast("ni hao ma", 9, 11);
+    aMsg = aMaker.makeMsgBCast("ni hao ma", 9, 11);
     //aMsg = aMaker.makeElec();
     //aMsg = aMaker.makeElecOK();
     msgMaker::serialize(msg, mLen, aMsg);
