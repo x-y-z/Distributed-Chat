@@ -254,7 +254,7 @@ int UDP::recvFromNACK(void *msg, size_t size,
     return rRet;
 }
 
-vector<peer> UDP::multiCastNACK(void *msg, size_t size,
+vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                                 const vector<peer> &clntList)
 {
     map<SOCKET, peer> sendList;
