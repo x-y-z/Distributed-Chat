@@ -7,11 +7,13 @@
 //
 
 #include <iostream>
-#include "client.h"
+#include "chatClient.h"
 
 int main()
 {
-    client a;
-//    client ck("xindon","127.0.0.1",12345);
-    return 1;
+    chatClient a;
+    string aa;
+    a.msgEnqueue(aa);
+    
+    return 0;
 }
