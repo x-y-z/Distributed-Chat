@@ -45,9 +45,9 @@ public:
 
 public:
     int processMSG(const char* msg, int mlen);
-    int msgEnqueue(const char* msg);
+    int msgEnqueue(string msg);
 private:
-    int join(string s_ip, int s_port);
+    int dojoin(string s_ip, int s_port);
     int sendBroadcastMsg(string msgContent);
     int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);
