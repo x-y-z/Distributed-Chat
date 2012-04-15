@@ -64,7 +64,7 @@ public:
     int recvFromTimeout(void *msg, size_t size, int timeout);
 public:
     //get time out 3 second, wait for ack
-    int sendToNACK(void *msg, size_t size);
+    int sendToNACK(const void *msg, size_t size);
     //wait for message, send ack immediately, no timeout
     int recvFromNACK(void *msg, size_t size,
                       const string &name, const string &ip,

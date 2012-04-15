@@ -50,8 +50,23 @@ client::client(string cname, string cIP,int cport){
     
 }
 
-int client::msgEnqueue(const char* msg){
-    inMsgQ.push_back(msg);
+int client::msgEnqueue(string msg){
+    string tempMsg;
+    bool skip = false;
+    inMsgQ.push(msg);
+    //process the message queue until it's empty
+    //blocking outter messages;
+    while (!inMsgQ.empty()) {
+        if(!skip){    
+            tempMsg = inMsgQ.front();
+            if(processMSG(tempMsg.c_str(),tempMsg.size())==1){
+                inMsgQ.pop();
+            }
+            else{
+                skip=true;
+            }
+        }
+    }
     
 }
 
@@ -66,7 +81,8 @@ int client::processMSG(const char* msg, int mlen)
     msgParser parser(msg, mlen);
         
     if(parser.isACK()){
-        return 0; 
+        //return 0;
+        
     }
     else{
         switch (parser.msgTypeIs()) {
@@ -85,7 +101,7 @@ int client::processMSG(const char* msg, int mlen)
                     return 1;
                 }
                 else{
-                    inMsgQ.push_back(msg);
+                    inMsgQ.push(msg);
                 }
                 break;
             case navi:
@@ -98,7 +114,7 @@ int client::processMSG(const char* msg, int mlen)
                 clntUDP.sendTo(outmsg.c_str(),outlen);
                 
                 parser.senderInfo(newIP,newPort,newID);
-                join(newIP, newPort);//use message structure directly.
+                dojoin(newIP, newPort);//use message structure directly.
                 return -1;
                 break;
             case join_ack:
@@ -184,7 +200,7 @@ int client::processMSG(const char* msg, int mlen)
                 if(C_ID>newID){
                     doElection();
                 }
-                return 1;
+                return -1;
             
                 break;
             case election_ok:
@@ -201,7 +217,7 @@ int client::processMSG(const char* msg, int mlen)
     }
 }
 
-int client::join(string s_ip, int s_port){
+int client::dojoin(string s_ip, int s_port){
     string outmsg;
     int outlen, saddr_len;
 
@@ -211,11 +227,13 @@ int client::join(string s_ip, int s_port){
     //args: sequencer's ip, port, myIP, myPort,myName;
     myMsg message = mmaker.makeJoin(name);
     msgMaker::serialize(outmsg, outlen, message);
-    clntUDP.sendTo(outmsg.c_str(),outlen);
-    status = WAIT_ACK;
-    //starts the time-out timer.
-    //signal(SIGALRM,sig_al_handler);
-    //alarm(1);
+    status = WAIT_ACK;    
+        
+    if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+        cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
+        exit(-1);
+    }
+    
     
     return 1;
 }
@@ -233,7 +251,9 @@ int client::sendBroadcastMsg(string msgContent){
         localMsgQ.pop();
         myMsg message = mmaker.makeMsg(tempMsg.c_str(),msgContent.size());
         msgMaker::serialize(outmsg, outlen, message);
-        clntUDP.sendTo(outmsg,outlen);
+        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+            doElection();
+        }
         //char temp = (char) message;
         //send the serialized message out.
     }

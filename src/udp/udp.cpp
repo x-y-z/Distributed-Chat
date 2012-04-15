@@ -182,7 +182,7 @@ int UDP::recvFromTimeout(void *msg, size_t size, int timeout)
 
 }
 
-int UDP::sendToNACK(void *msg, size_t size)
+int UDP::sendToNACK(const void *msg, size_t size)
 {
     int sRet, rRet;
     char rMsg[255];
