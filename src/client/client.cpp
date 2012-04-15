@@ -8,40 +8,20 @@
 
 #include <iostream>
 
-#include "../udp/udp.h"
 #include "client.h"
 
 #include <signal.h>
 #include <string>
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>
 
 
 using namespace std;
 
-////handle time out
-//void client::sig_al_handler(int signum){
-//    if(reSendCount==0){
-//        reSendCount++;
-//        signal(SIGALRM,client::sig_al_handler);
-//        alarm(1);
-//        resend();
-//    }
-////    else{
-////        alarm(0);
-////        if(msgToSend.){
-////            
-////        }
-////        
-////    }
-//}
 
 client::client(string cname, string cIP,int cport){
     name = cname;
     IP = cIP;
     port = cport;
-    next=true;
+    next = true;
     C_ID = -1;
     s_port = -1;
     reSendCount = 0;
@@ -87,17 +67,11 @@ int client::processMSG(const char* msg, int mlen)
     else{
         switch (parser.msgTypeIs()) {
             case join:
-                
-                //setup and send a UDP_ACK message
-                tempMsg = mmaker.makeACK();
-                msgMaker::serialize(outmsg,outlen,tempMsg);
-                clntUDP.sendTo(outmsg.c_str(),outlen);
-                
                 if(status!=ELEC){
                     //setup and send a Navi message
                     tempMsg = mmaker.makeNavi();
                     msgMaker::serialize(outmsg,outlen,tempMsg);
-                    clntUDP.sendTo(outmsg.c_str(),outlen);
+                    //clntUDP.sendTo(outmsg.c_str(),outlen);
                     return 1;
                 }
                 else{
@@ -107,11 +81,6 @@ int client::processMSG(const char* msg, int mlen)
             case navi:
                 //the client get a navi message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
                 //get the info of the sequencer and send another join message to it.
-                //alarm(0);
-                //setup and send a UDP_ACK message
-                tempMsg = mmaker.makeACK();
-                msgMaker::serialize(outmsg,outlen,tempMsg);
-                clntUDP.sendTo(outmsg.c_str(),outlen);
                 
                 parser.senderInfo(newIP,newPort,newID);
                 dojoin(newIP, newPort);//use message structure directly.
@@ -119,12 +88,6 @@ int client::processMSG(const char* msg, int mlen)
                 break;
             case join_ack:
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
-                //alarm(0);
-                
-                //setup and send a UDP_ACK message
-                tempMsg = mmaker.makeACK();
-                msgMaker::serialize(outmsg,outlen,tempMsg);
-                clntUDP.sendTo(outmsg.c_str(),outlen);
                 
                 parser.joinFeedback(msgMaxCnt, C_ID, clientList);
                 mmaker.setInfo(name,IP, port,C_ID);
@@ -142,14 +105,6 @@ int client::processMSG(const char* msg, int mlen)
                     newUser.c_id = newID;
                     newUser.port = newPort;
                     clientList.push_back(newUser);
-                    
-                    //send ACK message back to sequencer
-                    tempMsg = mmaker.makeACK();
-                    msgMaker::serialize(outmsg,outlen, tempMsg);
-                    if((clntUDP.sendTo(outmsg.c_str(),outlen))<0){
-                        cerr<<"Join broadcast sending error @"<<name<<" !"<<endl;
-                        exit(-1);
-                    }
                     return 1;
                 }
                 else{
@@ -168,10 +123,6 @@ int client::processMSG(const char* msg, int mlen)
                             break;
                         }
                     }
-                    //send ACK message back to sequencer
-                    tempMsg = mmaker.makeACK();
-                    msgMaker::serialize(outmsg,outlen, tempMsg);
-                    clntUDP.sendTo(outmsg.c_str(),outlen);
                     return 1;
                 }
                 else{
@@ -222,17 +173,17 @@ int client::dojoin(string s_ip, int s_port){
     int outlen, saddr_len;
 
     //setupt the UDP socket
-    clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
+    //clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
     
     //args: sequencer's ip, port, myIP, myPort,myName;
     myMsg message = mmaker.makeJoin(name);
     msgMaker::serialize(outmsg, outlen, message);
     status = WAIT_ACK;    
         
-    if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-        cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
-        exit(-1);
-    }
+//    if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+//        cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
+//        exit(-1);
+//    }
     
     
     return 1;
@@ -251,9 +202,9 @@ int client::sendBroadcastMsg(string msgContent){
         localMsgQ.pop();
         myMsg message = mmaker.makeMsg(tempMsg.c_str(),msgContent.size());
         msgMaker::serialize(outmsg, outlen, message);
-        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-            doElection();
-        }
+//        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+//            doElection();
+//        }
         //char temp = (char) message;
         //send the serialized message out.
     }
@@ -285,7 +236,19 @@ int client::removeUser(int CID){
 //return 1 if it's elected to be leader.
 //return -1 if not.
 int client::doElection(){
-    
-    status= NORMAL;
-    return -1;
+    myMsg tempMsg;
+    string outmsg;
+    int outlen;
+    tempMsg = mmaker.makeElec();
+    msgMaker::serialize(outmsg,outlen,tempMsg);
+//    vector<peer> timeoutClients =  clntUDP.multiCastNACK(outmsg.c_str(), outlen, clientList);
+    vector<peer> timeoutClients;
+    if(timeoutClients.empty()){
+        status= NORMAL;
+        return 1; 
+    }
+    else{
+        
+        return -1;
+    }
 }

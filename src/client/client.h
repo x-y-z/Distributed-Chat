@@ -6,11 +6,12 @@
 //  Copyright (c) 2012年 . All rights reserved.
 //
 
-#ifndef _CLIENT_H
-#define _CLIENT_H
+#ifndef __CLIENT_H__
+#define __CLIENT_H__
 
 #include "../msgType/msgMaker.h"
 #include "../msgType/msgParser.h"
+#include "../udp/udp.h"
 #include <vector>
 #include <queue>
 #include <string>
@@ -40,6 +41,7 @@ private:
     queue<string> localMsgQ;
     queue<string> inMsgQ;
 public:
+    client(){};
     client(string name, const string IP,const int port);
     ~client(){};
 
