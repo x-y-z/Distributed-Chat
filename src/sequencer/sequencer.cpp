@@ -167,7 +167,7 @@ int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
         int msgLen;
         int finished = -1;
 
-        while (!finished)
+        while (finished < 0)
         {
             msgLen = l_udp.recvFrom(gMsg, 1024);
             if (msgLen > 0)

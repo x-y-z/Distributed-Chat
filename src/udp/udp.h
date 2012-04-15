@@ -10,9 +10,16 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <map>
+
+#include "../msgType/msgMaker.h"
+#include "../msgType/msgParser.h"
+
+using namespace std;
 
 #define closesocket close
 #define SOCKET int
+#define SOCK_TIMEOUT -2
 
 enum udp_type
 {
@@ -55,6 +62,16 @@ public:
     int recvFromTimeout(void *msg, size_t size);
 
     int recvFromTimeout(void *msg, size_t size, int timeout);
+public:
+    //get time out 3 second, wait for ack
+    int sendToNACK(void *msg, size_t size);
+    //wait for message, send ack immediately, no timeout
+    int recvFromNACK(void *msg, size_t size,
+                      const string &name, const string &ip,
+                      int port, int id);
+    //broadcast and wait for ACK
+    vector<peer> multiCastNACK(void *msg, size_t size, 
+                const vector<peer> &clntList);
 
 private:
     udp_type _type;//0--client, 1--server
