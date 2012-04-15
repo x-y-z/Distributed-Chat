@@ -16,10 +16,13 @@ int main()
         int c_len;
         char buf[255];
         UDP server(S_PORT);
-        int ret = server.recvFrom(buf, 255, &client, (socklen_t*)&c_len);
-        std::cout<<buf<<std::endl;
+        //int ret = server.recvFrom(buf, 255, &client, (socklen_t*)&c_len);
+        int ret = server.recvFromTimeout(buf, 255);
+        if (ret == -2)
+            std::cerr<<"Timeout\n";
+        std::cout<<buf<<"  "<<ret<<std::endl;
         std::cin>>buf;
-        int ret1 = server.sendTo(buf, strlen(buf), &client, (socklen_t)c_len);
+        int ret1 = server.sendTo(buf, strlen(buf));///, &client, (socklen_t)c_len);
     }
     else
     {
@@ -32,13 +35,13 @@ int main()
         std::cin>>buf;
         UDP client(svr);
 
-        int ret = client.sendTo(buf, strlen(buf), (struct sockaddr *)&svr, s_len);
+        int ret = client.sendTo(buf, strlen(buf), &svr, s_len);
         if (ret == -1)
         {
             perror("sendto");
             exit(1);
         }
-        int ret1 = client.recvFrom(buf, 255, (struct sockaddr *)&svr, (socklen_t*)&s_len);
+        int ret1 = client.recvFrom(buf, 255, &svr, (socklen_t*)&s_len);
         std::cout<<buf<<std::endl;
     }
 

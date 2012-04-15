@@ -1,5 +1,6 @@
 #include "udp.h"
 #include <iostream>
+#include <sys/time.h>
 
 
 UDP::UDP(int port)
@@ -9,6 +10,8 @@ UDP::UDP(int port)
     _type = server;
 
     memset((char *)&_my_addr, 0, sizeof(_my_addr));
+    memset((char *)&_remote, 0, sizeof(_remote));
+    _r_len = sizeof(_remote);
     _my_addr.sin_port = htons((u_short)port);
     _my_addr.sin_family = AF_INET;
     _my_addr.sin_addr.s_addr = INADDR_ANY;
@@ -114,7 +117,7 @@ void UDP::setRemoteAddr(const char *host, int port)
 }
 
 int UDP::sendTo(const void *msg, size_t size,
-                const struct sockaddr *dest, socklen_t dest_len)
+                const struct sockaddr_in *dest, socklen_t dest_len)
 {
     if (_socket == 0)
     {
@@ -122,16 +125,16 @@ int UDP::sendTo(const void *msg, size_t size,
         return -1;
     }
 
-    return sendto(_socket, msg, size, 0, dest, dest_len);
+    return sendto(_socket, msg, size, 0, (const struct sockaddr*)dest, dest_len);
 }
 
 int UDP::sendTo(const void *msg, size_t size)
 {
-    return sendTo(msg, size,(struct sockaddr *)&_remote, _r_len);
+    return sendTo(msg, size, &_remote, _r_len);
 }
 
 int UDP::recvFrom(void *msg, size_t size,
-                  struct sockaddr *src, socklen_t *src_len)
+                  struct sockaddr_in *src, socklen_t *src_len)
 {
     if (_socket == 0)
     {
@@ -139,12 +142,14 @@ int UDP::recvFrom(void *msg, size_t size,
         return -1;
     }
 
-    return recvfrom(_socket, msg, size, 0, src, src_len);
+    int ret = recvfrom(_socket, msg, size, 0, (struct sockaddr*)src, src_len);
+
+    return ret;
 }
 
 int UDP::recvFrom(void *msg, size_t size)
 {
-   return recvFrom(msg, size, (struct sockaddr *)&_remote, 
+   return recvFrom(msg, size, &_remote, 
                    (socklen_t*)&_r_len); 
 
 }
@@ -161,18 +166,18 @@ int UDP::recvFromTimeout(void *msg, size_t size, int timeout)
     tv.tv_sec = timeout;  /*  30 Secs Timeout */
     tv.tv_usec = 0;
 
-    if(setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO,
-               (struct timeval *)&tv,sizeof(struct timeval)))
-    {
-        std::cerr<<"setsockopt error";        
-        return -1;
-    }
-    
-    int recvRet = recvFrom(msg, size);
-    
-    if (recvRet == -1)
-    {
+    fd_set socks;
+    FD_ZERO(&socks);
+    FD_SET(_socket, &socks);
 
+    if (select(_socket + 1, &socks, NULL, NULL, &tv))
+    {
+        int msgLen = recvFrom(msg, size);
+        return msgLen;
+    }
+    else
+    {
+        return -2;//for timeout
     }
 
 }
