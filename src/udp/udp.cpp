@@ -337,6 +337,7 @@ vector<peer> UDP::multiCastNACK(void *msg, size_t size,
                     {
                         //this client is clear
                         sendList.erase(iter);
+                        ackNum++;
                     }
                     else
                     {
@@ -361,7 +362,9 @@ vector<peer> UDP::multiCastNACK(void *msg, size_t size,
             {
                 if ((*iter).first < 0)
                 {
+                    //this client is time out
                     timeoutList.push_back((*iter).second);
+                    ackNum++;
                 }
                 else
                 {

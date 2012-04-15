@@ -25,6 +25,13 @@ typedef struct neighbor{
     int c_id;
 } peer;
 
+inline ostream& operator<<(ostream &o, const peer &n)
+{
+    return o<<"name is:"<<n.name<<endl<<"ip is:"<<n.ip<<endl
+            <<"port is:"<<n.port<<endl<<"id is:"<<n.c_id<<endl;
+
+}
+
 typedef struct messageStruct {
     int sendORrev;//0 for send, 1 for ACK
     int chat;//0 for Join, 1 for navi 2 for ACK-Join, 3 for Join-broadcast, 

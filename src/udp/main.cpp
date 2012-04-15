@@ -24,6 +24,9 @@ int main()
         std::cout<<buf<<"  "<<ret<<std::endl;
         std::cin>>buf;
         int ret1 = server.sendToNACK(buf, strlen(buf));///, &client, (socklen_t)c_len);
+        if (ret1 == -2)
+            std::cerr<<"Timeout\n";
+
     }
     else if (type == 1)
     {
@@ -43,14 +46,30 @@ int main()
             perror("sendto");
             exit(1);
         }
+        if (ret == -2)
+            std::cerr<<"Timeout\n";
+
         int ret1 = client.recvFromNACK(buf, 255,
                 "ziyan", "127.0.0.1", 23453, 9878);
         std::cout<<buf<<std::endl;
     }
-    else
+    else//2
     {
+        char buf[255];
         peer p1 = {"yyy", "127.0.0.1", 1234, 1},
              p2 = {"zzz", "127.0.0.1", 2345, 2};
+        vector<peer> sList;
+        sList.push_back(p1);
+        sList.push_back(p2);
+
+        UDP client;
+        std::cin>>buf;
+        sList = client.multiCastNACK(buf, strlen(buf), sList);
+
+        for (int i = 0; i < sList.size(); i++)
+        {
+            std::cout<<sList[i];
+        }
     }
 
     std::cout<<"Bye bye\n";
