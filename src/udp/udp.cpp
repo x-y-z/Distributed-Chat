@@ -182,7 +182,7 @@ int UDP::recvFromTimeout(void *msg, size_t size, int timeout)
 
 }
 
-int UDP::sendToNACK(void *msg, size_t size)
+int UDP::sendToNACK(const void *msg, size_t size)
 {
     int sRet, rRet;
     char rMsg[255];
@@ -220,7 +220,7 @@ int UDP::sendToNACK(void *msg, size_t size)
     }
 
     if (finished == 100)
-        return 0;
+        return sRet;
     else
         return -2;
 
@@ -251,13 +251,14 @@ int UDP::recvFromNACK(void *msg, size_t size,
         exit(1);
     }
 
-    return sRet;
+    return rRet;
 }
 
 vector<peer> UDP::multiCastNACK(void *msg, size_t size,
                                 const vector<peer> &clntList)
 {
     map<SOCKET, peer> sendList;
+    vector<peer> timeoutList;
 
     //initialize all socket
     for (int i = 0; i < clntList.size(); ++i)
@@ -282,33 +283,106 @@ vector<peer> UDP::multiCastNACK(void *msg, size_t size,
         sendList[newSock] = clntList[i];
     }
 
+    map<SOCKET, peer>::iterator iter;
     //sending
+    for (iter = sendList.begin(); iter != sendList.end(); iter++)
+    {
+        struct sockaddr_in remoteAddr;
+        int rLen;
+        remoteAddr = fromAddrToSock((*iter).second.ip, 
+                                    (*iter).second.port);
+        rLen = sizeof(remoteAddr);
+
+        sendto((*iter).first, msg, size, 0, 
+               (sockaddr*)&remoteAddr, rLen);
+    }
+    //wait for ack
     struct timeval tv;
 
-    tv.tv_sec = timeout;  /*  30 Secs Timeout */
+    tv.tv_sec = 3;  /*  3 Secs Timeout */
     tv.tv_usec = 0;
 
     int nfds = 0;
     fd_set socks;
     FD_ZERO(&socks);
-    map<SOCKET, peer>::iterator iter;
-    for (it = sendList.begin(); it != sendList.end(); it++)
+    for (iter = sendList.begin(); iter != sendList.end(); iter++)
     {
-        FD_SET((*it).first, &socks);
-        if ((*it).first > nfds)
-            nfds = (*it).first;
+        FD_SET((*iter).first, &socks);
+        if ((*iter).first > nfds)
+            nfds = (*iter).first;
     }
 
     int ackNum = 0, expectedNum = clntList.size();
     while (ackNum < expectedNum)
     {
-        if (select(nfds + 1, &socks, NULL, NULL, &tv))
+        char rackMsg[256];
+        int selectNum;
+
+        if ((selectNum = select(nfds + 1, &socks, NULL, NULL, &tv)) != 0)
         {
-            int msgLen = recvFrom(msg, size);
+            for (iter = sendList.begin(); iter != sendList.end(); iter++)
+            {
+                if (FD_ISSET((*iter).first, &socks))
+                {
+                    int msgLen = recvfrom((*iter).first, rackMsg, 256, 0,
+                                          NULL, NULL);
+                    if (msgLen < 0)
+                    {
+                        std::cerr<<"multicast: recvfrom error\n";
+                        exit(1);
+                    }
+
+                    msgParser aParser(rackMsg, msgLen);
+                    if (aParser.isACK())
+                    {
+                        //this client is clear
+                        sendList.erase(iter);
+                    }
+                    else
+                    {
+                        std::cerr<<"multicast: not ACK, unexpected message\n";
+                        exit(1);
+                        /*struct sockaddr_in remoteAddr;
+                        int rLen;
+                        remoteAddr = fromAddrToSock((*iter).second.ip, 
+                                                    (*iter).second.port);
+                        rLen = sizeof(remoteAddr);
+
+                        sendto((*iter).first, msg, size, 0, 
+                               (sockaddr*)&remoteAddr, rLen);
+                        */
+                    }
+                }
+            }
         }
         else//time out
         {
+            for (iter = sendList.begin(); iter != sendList.end(); iter++)
+            {
+                if ((*iter).first < 0)
+                {
+                    timeoutList.push_back((*iter).second);
+                }
+                else
+                {
+                    struct sockaddr_in remoteAddr;
+                    int rLen;
+                    remoteAddr = fromAddrToSock((*iter).second.ip, 
+                                                (*iter).second.port);
+                    rLen = sizeof(remoteAddr);
+
+                    sendto((*iter).first, msg, size, 0, 
+                           (sockaddr*)&remoteAddr, rLen);
+
+                    int tmpS = -(*iter).first;
+                    peer tmpP = (*iter).second;
+                    sendList.erase(iter);
+                    sendList[tmpS] = tmpP;
+                }
+            }
+             
         }
     }
 
+    return timeoutList;
 }
