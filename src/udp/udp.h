@@ -70,7 +70,7 @@ public:
                       const string &name, const string &ip,
                       int port, int id);
     //broadcast and wait for ACK
-    vector<peer> multiCastNACK(void *msg, size_t size, 
+    vector<peer> multiCastNACK(const void *msg, size_t size, 
                 const vector<peer> &clntList);
 
 private:
