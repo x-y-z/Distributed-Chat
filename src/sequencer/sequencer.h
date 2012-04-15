@@ -62,7 +62,7 @@ private:
     int putMsgInQ(const string &ip, int port, int id, const string &msg);
     int sendMsgBCast();
 
-    int waitForACK(const string &aMsg, int id);
+    int waitForACK(const string &aMsg, int id, UDP &l_udp);
     
 };
 

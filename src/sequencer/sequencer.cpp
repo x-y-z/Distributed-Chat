@@ -124,7 +124,7 @@ int sequencer::sendJoinACK(const string &ip, int port, int id, int msgMaxCnt)
     _udp.setRemoteAddr(ip.c_str(), port);
     _udp.sendTo(aMsg.c_str(), aMsg.size());
 
-    int waitRes = waitForACK(aMsg, id);
+    int waitRes = waitForACK(aMsg, id, _udp);
 
     if (waitRes == 2)//lost remote
         findAndDeletePeer(id);
@@ -161,7 +161,7 @@ int sequencer::sendMsgBCast()
 
 }
 
-void sequencer::waitForACK(const string &aMsg, int id)
+int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
 {
         char gMsg[1024];
         int msgLen;
@@ -169,7 +169,7 @@ void sequencer::waitForACK(const string &aMsg, int id)
 
         while (!finished)
         {
-            msgLen = _udp.recvFrom(gMsg, 1024);
+            msgLen = l_udp.recvFrom(gMsg, 1024);
             if (msgLen > 0)
             {
                 msgParser aParser(gMsg, msgLen);
@@ -191,7 +191,7 @@ void sequencer::waitForACK(const string &aMsg, int id)
                 //time out
                 if (finished == -1)
                 {
-                    _udp.sendTo(aMsg.c_str(), aMsg.size());
+                    l_udp.sendTo(aMsg.c_str(), aMsg.size());
                     finished++;
                 }
                 else
