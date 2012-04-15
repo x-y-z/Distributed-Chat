@@ -96,6 +96,9 @@ msgType msgParser::msgTypeIs()
         case 9:
             ret = election_ok;
             break;
+        case 10:
+            ret = leader_broadcast;
+            break;
         default:
             ret = msgError;
             break;
@@ -175,6 +178,17 @@ int msgParser::getMsg(int &msg_seq, string &text)
     return 0;
 }
 
+int msgParser::leaderName(string &name)
+{
+    if (msgTypeIs() != leader_broadcast)
+    {
+        return -1;
+    }
+
+    name.assign(_content.msgContent);
+
+    return 0;
+}
 //==============
 int msgParser::msgContent(char *msgOut, int &msgLen)
 {

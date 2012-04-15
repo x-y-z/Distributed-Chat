@@ -250,6 +250,28 @@ myMsg msgMaker::makeElecOK()
     return tmp;
 }
 
+myMsg msgMaker::makeLeader(const string &name)
+{
+    myMsg tmp;
+    memset(&tmp, 0, sizeof(myMsg));
+    tmp.sendORrev = 0;
+
+    tmp.chat = 10;
+   
+    assert(_ip.size() < 20);
+    memcpy(tmp.ip, _ip.c_str(), _ip.size());
+
+    tmp.port = _port;
+    tmp.self_id = _self_id;
+
+    tmp.msgLen = name.length();
+
+    tmp.msgContent = new char[tmp.msgLen];
+    memcpy(tmp.msgContent, name.c_str(), tmp.msgLen);
+
+    return tmp;
+}
+
 /* static void msgMaker::serlize(string &outMsg, int &outLen, const myMsg &inMsg)
 {
     char *tmpMsg;

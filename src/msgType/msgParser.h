@@ -49,9 +49,9 @@ enum msgType{
     msg_broadcast,
     election_req,
     election_ok,
+    leader_broadcast,
     msgError
 };
- 
 inline ostream& operator<<(ostream &o, const msgType &n)
 {
     switch(n)
@@ -76,6 +76,8 @@ inline ostream& operator<<(ostream &o, const msgType &n)
             return o<<"Election-Request";
         case election_ok:
             return o<<"Election-OK";
+        case leader_broadcast:
+            return o<<"I'm the leader";
         case msgError:
             return o<<"Msg Error";
         default:
@@ -103,6 +105,7 @@ public:
     int joinFeedback(int &msgMaxCnt, int &my_id, vector<peer> &peerlist); 
     int getMsg(string &text);
     int getMsg(int &msg_seq, string &text);
+    int leaderName(string &name);
 private:
     int msgContent(char *msg, int &msgLen);
 };
