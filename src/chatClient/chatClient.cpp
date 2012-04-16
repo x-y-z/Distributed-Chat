@@ -25,9 +25,11 @@ chatClient::chatClient(string cname, string cIP,int cport){
     mmaker.setInfo(cname,cIP, cport,C_ID);
     
 }
-
+//if return 10, change to sequencer
+//else return -10, stay as user.
 int chatClient::msgEnqueue(string msg){
     string tempMsg;
+    int toReturn =0;
     bool skip = false;
     inMsgQ.push(msg);
     //process the message queue until it's empty
@@ -35,9 +37,15 @@ int chatClient::msgEnqueue(string msg){
     while (!inMsgQ.empty()) {
         cout<<"processing messages..."<<inMsgQ.size()<<" messages left"<<endl;
         tempMsg = inMsgQ.front();
-        processMSG(tempMsg.c_str(),tempMsg.size());
+        //if return 10, change to sequencer
+        //else return -10, stay as user.
+        if(processMSG(tempMsg.c_str(),tempMsg.size())==10){
+            toReturn=10;
+        }
+        else toReturn=-10;
         inMsgQ.pop();
     }
+    return toReturn;
     
 }
 
@@ -83,6 +91,10 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 
                 parser.joinFeedback(msgMaxCnt, C_ID, clientList);
+                cout<<"There are "<<clientList.size()<<" users in the list"<<endl;
+                cout<<"they are: "<<endl;
+                cout<<"name: "<<clientList[0].name<<"; IP: "<<clientList[0].ip<<"; C_ID: "<<clientList[0].c_id<<"; port: "<<clientList[0].port<<endl;
+                cout<<"name: "<<clientList[1].name<<"; IP: "<<clientList[1].ip<<"; C_ID: "<<clientList[1].c_id<<"; port: "<<clientList[1].port<<endl;
                 mmaker.setInfo(name,IP, port,C_ID);
                 status = NORMAL;
                 return 1;
@@ -117,7 +129,14 @@ int chatClient::processMSG(const char* msg, int mlen)
                             break;
                         }
                     }
-                    return 1;
+                    //sequencer leaves
+                    if (newIP==s_ip) {
+                        if(doElection()==1){
+                            return 10;
+                        }
+                        else return -10;
+                    }
+                    
                 }
                 else{
                     cerr<<"Unexpected Leave Broadcast message @"<<name<<" !"<<endl;
@@ -147,9 +166,11 @@ int chatClient::processMSG(const char* msg, int mlen)
                 parser.senderInfo(newIP,newPort,newID);
                 
                 if(C_ID>newID){
-                    doElection();
+                    if(doElection()>0){
+                        return 10;
+                    }
+                    else return -10;
                 }
-                return -1;
             
                 break;
             case election_ok:
@@ -186,10 +207,11 @@ int chatClient::dojoin(string s_ip, int s_port){
     
     return 1;
 }
-
+//return 1 if normal
+//return 10 if sequencer chrashes and change to sequencer.
 int chatClient::sendBroadcastMsg(string msgContent){
     string tempMsg, outmsg;
-    int outlen;
+    int outlen, i;
     localMsgQ.push(msgContent);
     if(next){
         if(localMsgQ.empty()){
@@ -200,11 +222,20 @@ int chatClient::sendBroadcastMsg(string msgContent){
         localMsgQ.pop();
         myMsg message = mmaker.makeMsg(tempMsg.c_str(),msgContent.size());
         msgMaker::serialize(outmsg, outlen, message);
-//        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-//            doElection();
-//        }
-        //char temp = (char) message;
-        //send the serialized message out.
+        next=false;
+        //if timeout, clear local message queue and do election.
+        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+            //localMsgQ.clear();
+            for (i=0; i<localMsgQ.size(); i++) {
+                localMsgQ.pop();
+            }
+            next=true;
+            if(doElection()){
+                return 10; 
+            }
+            else return -1;
+        }
+        next = true;
     }
     
     return 1;
