@@ -93,15 +93,12 @@ int main(int argc, char *argv[])
     chatClient aClnt(myName.c_str(), myIP.c_str(), myPort);
 
     //message handling loop
-    if (myType == dServer)
+    while (mainRunning)
     {
-        while(mainRunning)
+        if (myType == dServer)
         {
         }
-    }
-    else if (myType == dClient)
-    {
-        while(mainRunning)
+        else if (myType == dClient)
         {
         }
     }
