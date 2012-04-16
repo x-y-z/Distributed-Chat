@@ -51,7 +51,6 @@ public:
     int sendBroadcastMsg(string msgContent);
 private:
     int dojoin(string s_ip, int s_port);
-
     int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);
     int doElection();
