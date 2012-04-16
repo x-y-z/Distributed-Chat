@@ -94,8 +94,14 @@ string UDP::getMyIP()
     struct hostent *phe = gethostbyname(hostname);
     if (phe == 0)
     {
-        std::cerr<<"look up for IP address error\n";
-        exit(1);
+        //for mac
+        strncpy(hostname + strlen(hostname), ".local", 6);
+        phe = gethostbyname(hostname);
+        if (phe == 0)
+        {
+            std::cerr<<"look up for IP address error\n";
+            exit(1);
+        }
     }
 
     struct in_addr addr;

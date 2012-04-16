@@ -16,12 +16,25 @@
 #ifndef __DCHAT_H__
 #define __DCHAT_H__
 
+#include <string>
+#include <pthread.h>
+
+using namespace std;
+
 enum dchatType
 {
     dServer,
     dClient
 };
 
+typedef struct threadArgs{
+    string seqIP;
+    int seqPort;
+    pthread_t mainID;
+} threadArgs;
+
 int getAPortNum();
+
+void * uiInteract(void *args);
 
 #endif

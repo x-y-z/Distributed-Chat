@@ -21,11 +21,15 @@
 #include "chatClient/chatClient.h"
 #include "udp/udp.h"
 
+int mainRunning = 1;
+
+
 int main(int argc, char *argv[])
 {
     string myName, myIP, seqName, seqIP;
     int myPort, seqPort;
     dchatType myType;
+    threadArgs tArgs;
 
     if (argc != 2 && argc != 3)
     {
@@ -75,9 +79,37 @@ int main(int argc, char *argv[])
         std::cerr<<"Undefined machine type\n";
         exit(1);
     }
+    //get started
+    tArgs.seqIP = seqIP;
+    tArgs.seqPort = seqPort;
+    tArgs.mainID = pthread_self();
+
+    pthread_t uiThread;
+    int threadRet;
+
+    threadRet = pthread_create(&uiThread, NULL, uiInteract, (void*)&tArgs);
 
     sequencer aSeq(myName.c_str(), myIP.c_str(), myPort);
     chatClient aClnt(myName.c_str(), myIP.c_str(), myPort);
+
+    //message handling loop
+    if (myType == dServer)
+    {
+        while(mainRunning)
+        {
+        }
+    }
+    else if (myType == dClient)
+    {
+        while(mainRunning)
+        {
+        }
+    }
+
+
+    pthread_join(uiThread, NULL);
+
+    return 0;
 }
 
 int getAPortNum()
@@ -87,4 +119,22 @@ int getAPortNum()
     portNum = rand() % 500 + 1025;
 
     return portNum;
+}
+
+void * uiInteract(void *args)
+{
+    threadArgs *outArgs = (threadArgs *)args;
+    int running = 1;
+
+    while(running)
+    {
+        std::cin>>running;
+        if (running == 0)
+        {
+            mainRunning = 0;
+        }
+
+    }
+
+    return 0;
 }
