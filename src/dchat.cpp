@@ -66,6 +66,9 @@ int main(int argc, char *argv[])
 
     if (myType == dServer)
     {
+        seqIP = myIP;
+        seqPort = myPort;
+        seqName = myName;
         std::cout<<myName<<" started a new chat, listening on "
                  <<myIP<<":"<<myPort<<endl;
     }
@@ -82,6 +85,9 @@ int main(int argc, char *argv[])
     //get started
     tArgs.seqIP = seqIP;
     tArgs.seqPort = seqPort;
+    tArgs.myIP = myIP;
+    tArgs.myPort = myPort;
+    tArgs.myName = myName;
     tArgs.mainID = pthread_self();
 
     pthread_t uiThread;
@@ -122,15 +128,30 @@ void * uiInteract(void *args)
 {
     threadArgs *outArgs = (threadArgs *)args;
     int running = 1;
+    UDP msgSender;
+    string myName = outArgs->myName;
+    string myIP = outArgs->myIP;
+    int myPort = outArgs->myPort;
+
+    msgSender.setRemoteAddr(outArgs->seqIP.c_str(), outArgs->seqPort);
 
     while(running)
     {
-        std::cin>>running;
-        if (running == 0)
+        string input;
+
+        // get user input
+        getline(cin, input);
+        if (cin.eof() == 1)
         {
+            running = 0;
             mainRunning = 0;
+            continue;
         }
 
+        cout<<myName<<": "<<input<<endl;
+        // send message to sequencer
+        // handle existing situation
+        
     }
 
     return 0;

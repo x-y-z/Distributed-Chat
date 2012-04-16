@@ -28,6 +28,9 @@ enum dchatType
 };
 
 typedef struct threadArgs{
+    string myIP;
+    int myPort;
+    string myName;
     string seqIP;
     int seqPort;
     pthread_t mainID;
