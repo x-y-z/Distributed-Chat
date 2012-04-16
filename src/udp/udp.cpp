@@ -82,6 +82,30 @@ struct sockaddr_in UDP::fromAddrToSock(const char *host, const int port)
     return tmp_addr;
 }
 
+string UDP::getMyIP()
+{
+    char hostname[100];
+    if (gethostname(hostname, sizeof(hostname)) == -1)
+    {
+        std::cerr<<"get hostname error\n";
+        exit(1);
+    }
+
+    struct hostent *phe = gethostbyname(hostname);
+    if (phe == 0)
+    {
+        std::cerr<<"look up for IP address error\n";
+        exit(1);
+    }
+
+    struct in_addr addr;
+    memcpy(&addr, phe->h_addr_list[0], sizeof(struct in_addr));
+
+    string ret(inet_ntoa(addr));
+
+    return ret;
+}
+
 void UDP::setListenPort(int port)
 {
 

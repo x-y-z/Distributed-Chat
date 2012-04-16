@@ -43,6 +43,7 @@ public:
 
 public:
     static struct sockaddr_in fromAddrToSock(const char *host, const int port);
+    static string getMyIP();
     void setRemoteAddr(const char *host, int port);
 private:
     void setListenPort(int port);

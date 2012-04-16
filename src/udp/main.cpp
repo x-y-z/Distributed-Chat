@@ -53,7 +53,7 @@ int main()
                 "ziyan", "127.0.0.1", 23453, 9878);
         std::cout<<buf<<std::endl;
     }
-    else//2
+    else if (type == 2)//2
     {
         char buf[255];
         peer p1 = {"yyy", "127.0.0.1", 1234, 1},
@@ -70,6 +70,10 @@ int main()
         {
             std::cout<<sList[i];
         }
+    }
+    else
+    {
+        std::cout<<UDP::getMyIP()<<std::endl;
     }
 
     std::cout<<"Bye bye\n";
