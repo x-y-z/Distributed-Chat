@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
     if (myType == dServer)
     {
         tArgs.myID = myID = aSeq.getID();
+        std::cout<<"Succeeded, current users:"<<endl;
         aSeq.printMemberList();
         std::cout<<"Wait for others to join..."<<endl;
 
@@ -138,7 +139,9 @@ int main(int argc, char *argv[])
 
         if (myType == dServer)
         {
-            aSeq.processMSG(recvMsg, recvMsgLen);
+            int pRet = aSeq.processMSG(recvMsg, recvMsgLen);
+            if (pRet != 0)
+                std::cerr<<"something wrong\n";
         }
         else if (myType == dClient)
         {
@@ -168,6 +171,7 @@ void * uiInteract(void *args)
     string myIP = outArgs->myIP;
     int myPort = outArgs->myPort;
     int myID = outArgs->myID;
+    pthread_t mainPID = outArgs->mainID;
     msgMaker aMaker;
 
     aMaker.setInfo(myName, myIP, myPort, myID);
@@ -193,6 +197,7 @@ void * uiInteract(void *args)
         {
             uiRunning = 0;
             mainRunning = 0;
+            pthread_cancel(mainPID);
             continue;
         }
 
@@ -204,6 +209,7 @@ void * uiInteract(void *args)
         {
             msgMaker::serialize(outMsg, outMsgLen,
                             aMaker.makeMsg(input.c_str(), input.size())); 
+            msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
         }
     }
 

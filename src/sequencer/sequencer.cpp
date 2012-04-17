@@ -25,12 +25,20 @@ sequencer::sequencer(const char* name, const char*ip, int port)
     my_port = port;
     my_id = max_id;
     max_id++;
+
+    /*peer self;
+    strncpy(self.name, my_name.c_str(), my_name.size());
+    strncpy(self.ip, my_ip.c_str(), my_ip.size());
+    self.port = my_port; 
+    self.c_id = my_id;
+    clientList.push_back(self);*/
 }
 
 int sequencer::processMSG(const char *inMsg, int mlen)
 {
     msgParser aParser(inMsg, mlen);
     int status = 0;
+    std::cerr<<"got a message:"<<aParser.msgTypeIs()<<endl;
 
     switch (aParser.msgTypeIs())
     {
@@ -83,6 +91,10 @@ int sequencer::processMSG(const char *inMsg, int mlen)
 
                 string recvMsg;
                 aParser.getMsg(recvMsg);
+
+                std::cerr<<"a message from: "<<ip<<":"<<port<<" is: "
+                         <<recvMsg<<endl;
+
                 //put into local msg queue
                 putMsgInQ(ip, port, id, recvMsg);
                 int sendRes = sendMsgBCast();
@@ -96,6 +108,20 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 }
             }
             break;
+         /*case msg_broadcast:
+            {
+                string ip;
+                int port, id;
+                aParser.senderInfo(ip, port, id);
+
+                string recvMsg;
+                aParser.getMsg(recvMsg);
+
+                std::cout<<recvMsg;
+
+                status = 0;
+            }
+            break;*/
         case election_req:
             {
                 std::cerr<<"Unexpected election, ignored!\n";
@@ -260,6 +286,7 @@ int sequencer::sendMsgBCast()
     int msgGlobalNum = nextMsgCnt();
     string bMsg = _MsgQ.front();
     _MsgQ.pop_front();
+    int status = 0;
 
     msgMaker aMaker;
     aMaker.setInfo(my_name, my_ip, my_port, my_id);
@@ -273,7 +300,7 @@ int sequencer::sendMsgBCast()
     vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
-        return 0;
+        status = 0;
     else
     {
         vector<peer>::iterator iter;
@@ -282,15 +309,24 @@ int sequencer::sendMsgBCast()
             findAndDeletePeer((*iter).c_id);
         }
 
-        return -1;
+        status = -1;
     }
 
-
+    std::cout<<bMsg<<endl;
+    std::cout.flush();
+    
+    return status;
 }
 
 void sequencer::printMemberList()
 {
-
+    std::cout<<my_name<<" "<<my_ip<<":"<<my_port<<" (Leader)"<<endl;
+    //for clients
+    vector<peer>::iterator iter;
+    for (iter = clientList.begin(); iter != clientList.end(); iter++)
+    {
+        std::cout<<(*iter).name<<" "<<(*iter).ip<<":"<<(*iter).port<<endl;
+    }
 }
 
 /*int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
