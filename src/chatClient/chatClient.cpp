@@ -72,7 +72,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                     //setup and send a Navi message
                     tempMsg = mmaker.makeNavi();
                     msgMaker::serialize(outmsg,outlen,tempMsg);
-                    //clntUDP.sendTo(outmsg.c_str(),outlen);
+                    clntUDP.sendTo(outmsg.c_str(),outlen);
                     return 1;
                 }
                 else{
@@ -94,10 +94,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 
                 parser.joinFeedback(msgMaxCnt, C_ID, clientList);
-//                cout<<"There are "<<clientList.size()<<" users in the list"<<endl;
-//                cout<<"they are: "<<endl;
-//                cout<<"name: "<<clientList[0].name<<"; IP: "<<clientList[0].ip<<"; C_ID: "<<clientList[0].c_id<<"; port: "<<clientList[0].port<<endl;
-//                cout<<"name: "<<clientList[1].name<<"; IP: "<<clientList[1].ip<<"; C_ID: "<<clientList[1].c_id<<"; port: "<<clientList[1].port<<endl;
                 //call the setInfo again so as to set the C_ID field
                 mmaker.setInfo(name,IP, port,C_ID);
                 status = NORMAL;
@@ -138,15 +134,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                     //sequencer leaves
                     if (newID==s_id) {
                         if(doElection()==1){
-                            //this client itself is elected to be the sequencer
-                            //setup and broadcast the "I am the leader" message.
-                            tempMsg = mmaker.makeLeader(name);
-                            msgMaker::serialize(outmsg,outlen,tempMsg);
-                            clntUDP.multiCastNACK(outmsg.c_str(),outlen,timeoutList);
-                            
-                            
-                            /*have not decide what to do with the timeout*/
-                            
                             
                             return 10;
                         }
@@ -206,15 +193,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                 
                 if(C_ID>newID){
                     if(doElection()>0){
-                        //this client itself is elected to be the sequencer
-                        //setup and broadcast the "I am the leader" message.
-                        tempMsg = mmaker.makeLeader(name);
-                        msgMaker::serialize(outmsg,outlen,tempMsg);
-                        clntUDP.multiCastNACK(outmsg.c_str(),outlen,timeoutList);
-                        
-                        
-                        /*have not decide what to do with the timeout*/
-                        
                         
                         return 10;
                     }
@@ -252,16 +230,16 @@ int chatClient::dojoin(string s_ip, int s_port){
     int outlen, saddr_len;
 
     //setupt the UDP socket
-    //clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
+    clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
     
     //args: sequencer's ip, port, myIP, myPort,myName;
     myMsg message = mmaker.makeJoin(name);
     msgMaker::serialize(outmsg, outlen, message);    
         
-//    if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-//        cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
-//        exit(-1);
-//    }
+    if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+        cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
+        exit(-1);
+    }
     
     
     return 1;
@@ -293,14 +271,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
             }
             next=true;
             if(doElection()>0){
-                //this client itself is elected to be the sequencer
-                //setup and broadcast the "I am the leader" message.
-                tempMessage = mmaker.makeLeader(name);
-                msgMaker::serialize(outmsg,outlen,tempMessage);
-                clntUDP.multiCastNACK(outmsg.c_str(),outlen,timeoutList);
-                
-                
-                /*have not decide what to do with the timeout*/
+               
                 
                 
                 return 10; 
@@ -348,8 +319,7 @@ int chatClient::doElection(){
         status= NORMAL;
         return 1; 
     }
-    else{
-        
+    else{       
         return -1;
     }
 }

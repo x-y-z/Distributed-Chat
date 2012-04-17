@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     {
         char recvMsg[MAX_MSG_LEN];
         int recvMsgLen;
-
+        
         recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
                               myPort, myID);
 
@@ -147,11 +147,14 @@ int main(int argc, char *argv[])
         }
         else if (myType == dClient)
         {
+            int clientRV=0;
+            clientRV= aClnt.msgEnqueue(string(recvMsg));
             
-	       if( aClnt.msgEnqueue(string(recvMsg))==10){
-
-           }
-
+	        if( clientRV==10){
+                myType = dServer;
+                //switch to sequencer, and broadcast the " I am the leader " message
+                //(handle time out by deleting and broadcasting leave messages)
+            } 
         }
     }
 
