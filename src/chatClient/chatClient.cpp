@@ -330,7 +330,7 @@ void chatClient::displayClients(){
 	cout<<"Succeed, current users:"<<endl;
 	for(i=0;i<clientList.size();i++){
 		if(printleader){
-			if(clientList[i].id!=s_id){
+			if(clientList[i].c_id!=s_id){
 				continue;
 			}
 			else{
@@ -341,7 +341,7 @@ void chatClient::displayClients(){
 			}
 		}
 		else{
-			if(clientList[i].id==s_id){
+			if(clientList[i].c_id==s_id){
 				continue;
 			}
 			else{
