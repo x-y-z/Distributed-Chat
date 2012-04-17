@@ -48,6 +48,10 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 int port, id;
                 aParser.senderInfo(ip, port, id);
                 aParser.joinName(name);
+
+                std::cout<<"NOTICE "<<name<<" joined on "
+                         <<ip<<":"<<port<<endl;
+
                 id = newClientId();
                 //add to client list
                 addToClientList(name, ip, port, id);
@@ -91,9 +95,6 @@ int sequencer::processMSG(const char *inMsg, int mlen)
 
                 string recvMsg;
                 aParser.getMsg(recvMsg);
-
-                std::cerr<<"a message from: "<<ip<<":"<<port<<" is: "
-                         <<recvMsg<<endl;
 
                 //put into local msg queue
                 putMsgInQ(ip, port, id, recvMsg);
@@ -224,6 +225,8 @@ int sequencer::findAndDeletePeer(int id)
     {
         if ((*iter).c_id == id)
         {
+            std::cout<<"NOTICE "<<(*iter).name<<"left the chat or crashed"
+                     <<endl;
             clientList.erase(iter);
             return 0;
         }

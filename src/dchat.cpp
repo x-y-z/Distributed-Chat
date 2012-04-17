@@ -201,7 +201,7 @@ void * uiInteract(void *args)
             continue;
         }
 
-        input = myName + ": " + input;
+        input = myName + ":: " + input;
         //cout<<myName<<": "<<input<<endl;
         // send message to sequencer
         // no msg sending while election or special situation
