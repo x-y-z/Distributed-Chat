@@ -49,8 +49,13 @@ public:
     int processMSG(const char *msg, int mlen);
 
     int getID(){ return my_id;};
+    void setID(int aID){ my_id = aID; max_id = aID + 1;};
+
+    void setMaxMsgID(int aID) {msg_seq_id = aID; };
 
     void printMemberList();
+    
+    void setClientList(const vector<peer> &aList) {clientList = aList;};
 
 private:
     //for join
