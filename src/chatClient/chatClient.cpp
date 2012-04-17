@@ -352,3 +352,9 @@ void chatClient::displayClients(){
 		
 	}
 }
+int chatClient::getID(){
+    return C_ID;
+}
+vector<peer> chatClient::getClientList(){
+    return clientList;
+}
