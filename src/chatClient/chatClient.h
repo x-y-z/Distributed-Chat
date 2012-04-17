@@ -50,7 +50,7 @@ public:
 
 public:
     int processMSG(const char* msg, int mlen);
-    int msgEnqueue(const char* msg);
+    int msgEnqueue(const char* msg, int len);
     int sendBroadcastMsg(string msgContent);
     void displayClients();
     int dojoin(string s_ip, int s_port); 

@@ -27,16 +27,19 @@ chatClient::chatClient(string cname, string cIP,int cport){
 }
 //if return 10, change to sequencer
 //else return -10, stay as user.
-int chatClient::msgEnqueue(const char* msg){
-    string tempMsg(msg);
+int chatClient::msgEnqueue(const char* msg, int len){
+    string tempMsg(msg,len);
     int toReturn =0;
     bool skip = false;
+    cout<<"msg: "<<msg<<endl;
     inMsgQ.push(tempMsg);
+    cout<<"temp: "<<tempMsg<<endl;
     //process the message queue until it's empty
     //blocking outter messages;
     while (!inMsgQ.empty()) {
         cout<<"processing messages..."<<inMsgQ.size()<<" messages left"<<endl;
         tempMsg = inMsgQ.front();
+        cout<<"temp: "<<tempMsg<<endl;
         //if return 10, change to sequencer
         //else return -10, stay as user.
         if(processMSG(tempMsg.c_str(),tempMsg.size())==10){

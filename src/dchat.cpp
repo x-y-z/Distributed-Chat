@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
         
         aClnt.dojoin(seqIP,seqPort);
         tArgs.myID = myID = aClnt.getID();
+        aClnt.displayClients();
     }
 
     
@@ -149,7 +150,7 @@ int main(int argc, char *argv[])
         else if (myType == dClient)
         {
             int clientRV=0;
-            clientRV= aClnt.msgEnqueue(recvMsg);
+            clientRV= aClnt.msgEnqueue(recvMsg,recvMsgLen);
             
 	        if( clientRV==10){
                 myType = dServer;
