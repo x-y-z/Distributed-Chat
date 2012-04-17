@@ -62,7 +62,8 @@ int chatClient::processMSG(const char* msg, int mlen)
         
     if(parser.isACK()){
         //return 0;
-        
+        //since all the UDP_ACKs are handled in the underlaying UDP-wrapper layer, we simply
+        //ignore the this message.
     }
     else{
         switch (parser.msgTypeIs()) {
@@ -75,6 +76,8 @@ int chatClient::processMSG(const char* msg, int mlen)
                     return 1;
                 }
                 else{
+                    //receive a Join request message during the election, push it into message queue and
+                    //handle it later on.
                     inMsgQ.push(msg);
                     return 1;
                 }
@@ -84,17 +87,18 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get the info of the sequencer and send another join message to it.
                 
                 parser.senderInfo(newIP,newPort,newID);
-                dojoin(newIP, newPort);//use message structure directly.
+                dojoin(newIP, newPort);
                 return 1;
                 break;
             case join_ack:
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 
                 parser.joinFeedback(msgMaxCnt, C_ID, clientList);
-                cout<<"There are "<<clientList.size()<<" users in the list"<<endl;
-                cout<<"they are: "<<endl;
-                cout<<"name: "<<clientList[0].name<<"; IP: "<<clientList[0].ip<<"; C_ID: "<<clientList[0].c_id<<"; port: "<<clientList[0].port<<endl;
-                cout<<"name: "<<clientList[1].name<<"; IP: "<<clientList[1].ip<<"; C_ID: "<<clientList[1].c_id<<"; port: "<<clientList[1].port<<endl;
+//                cout<<"There are "<<clientList.size()<<" users in the list"<<endl;
+//                cout<<"they are: "<<endl;
+//                cout<<"name: "<<clientList[0].name<<"; IP: "<<clientList[0].ip<<"; C_ID: "<<clientList[0].c_id<<"; port: "<<clientList[0].port<<endl;
+//                cout<<"name: "<<clientList[1].name<<"; IP: "<<clientList[1].ip<<"; C_ID: "<<clientList[1].c_id<<"; port: "<<clientList[1].port<<endl;
+                //call the setInfo again so as to set the C_ID field
                 mmaker.setInfo(name,IP, port,C_ID);
                 status = NORMAL;
                 return 1;
@@ -113,13 +117,15 @@ int chatClient::processMSG(const char* msg, int mlen)
                     return 1;
                 }
                 else{
+                    //in wrong state, push the message into message queue and handle later on
                     cerr<<"Unexpected Join Broadcast message @"<<name<<" !"<<endl;
                     inMsgQ.push(string(msg));
                     return -1;
                 }
                 break;
-            case leave_broadcast:
+            case leave_broadcast:{
                 //remove the specific user from the peer list
+                vector<peer> timeoutList;
                 if(status==NORMAL){
                     parser.senderInfo(newIP,newPort,newID);
                     
@@ -132,17 +138,29 @@ int chatClient::processMSG(const char* msg, int mlen)
                     //sequencer leaves
                     if (newIP==s_ip) {
                         if(doElection()==1){
+                            //this client itself is elected to be the sequencer
+                            //setup and broadcast the "I am the leader" message.
+                            tempMsg = mmaker.makeLeader(name);
+                            msgMaker::serialize(outmsg,outlen,tempMsg);
+                            clntUDP.multiCastNACK(outmsg.c_str(),outlen,timeoutList);
+                            
+                            
+                            /*have not decide what to do with the timeout*/
+                            
+                            
                             return 10;
                         }
                         else return -10;
                     }
                     
                 }
+            
                 else{
                     cerr<<"Unexpected Leave Broadcast message @"<<name<<" !"<<endl;
                     return -1;
                 }
                 break;
+            }
             case msg_broadcast:
                 
                 //show the message to the standard output
@@ -156,23 +174,35 @@ int chatClient::processMSG(const char* msg, int mlen)
                 }
                 else{
                     cerr<<"Unexpected msg Broadcast message @"<<name<<" !"<<endl;
+                    inMsgQ.push(string(msg));
                     return -1;
                 }
                 break;
-            case election_req:
+            case election_req:{
                 //do BULLY
-                
+                vector<peer> timeoutList;
                 status=ELEC;
                 parser.senderInfo(newIP,newPort,newID);
                 
                 if(C_ID>newID){
                     if(doElection()>0){
+                        //this client itself is elected to be the sequencer
+                        //setup and broadcast the "I am the leader" message.
+                        tempMsg = mmaker.makeLeader(name);
+                        msgMaker::serialize(outmsg,outlen,tempMsg);
+                        clntUDP.multiCastNACK(outmsg.c_str(),outlen,timeoutList);
+                        
+                        
+                        /*have not decide what to do with the timeout*/
+                        
+                        
                         return 10;
                     }
                     else return -10;
                 }
             
                 break;
+            }
             case election_ok:
                 //do BULLY
                 if(status!=ELEC){
@@ -181,7 +211,15 @@ int chatClient::processMSG(const char* msg, int mlen)
                 }
                 return 1;
                 break;
-                
+            case leader_broadcast:
+                //get and setup the info of the new sequencer
+                //here we just ignore the state which this client is in. Cause it's safe 
+                //to change the sequencer here.
+                parser.senderInfo(newIP,newPort,newID);
+                s_ip = newIP;
+                s_port = newPort;
+                return 1;
+                break;
             default: //not used here.
                 break;
         }
@@ -207,11 +245,14 @@ int chatClient::dojoin(string s_ip, int s_port){
     
     return 1;
 }
+
 //return 1 if normal
 //return 10 if sequencer chrashes and change to sequencer.
 int chatClient::sendBroadcastMsg(string msgContent){
     string tempMsg, outmsg;
+    myMsg tempMessage;
     int outlen, i;
+    vector<peer> timeoutList;
     localMsgQ.push(msgContent);
     if(next){
         if(localMsgQ.empty()){
@@ -230,7 +271,17 @@ int chatClient::sendBroadcastMsg(string msgContent){
                 localMsgQ.pop();
             }
             next=true;
-            if(doElection()){
+            if(doElection()>0){
+                //this client itself is elected to be the sequencer
+                //setup and broadcast the "I am the leader" message.
+                tempMessage = mmaker.makeLeader(name);
+                msgMaker::serialize(outmsg,outlen,tempMessage);
+                clntUDP.multiCastNACK(outmsg.c_str(),outlen,timeoutList);
+                
+                
+                /*have not decide what to do with the timeout*/
+                
+                
                 return 10; 
             }
             else return -1;
@@ -270,8 +321,8 @@ int chatClient::doElection(){
     int outlen;
     tempMsg = mmaker.makeElec();
     msgMaker::serialize(outmsg,outlen,tempMsg);
-//    vector<peer> timeoutClients =  clntUDP.multiCastNACK(outmsg.c_str(), outlen, clientList);
-    vector<peer> timeoutClients;
+    vector<peer> timeoutClients =  clntUDP.multiCastNACK(outmsg.c_str(), outlen, clientList);
+    //vector<peer> timeoutClients;
     if(timeoutClients.empty()){
         status= NORMAL;
         return 1; 
