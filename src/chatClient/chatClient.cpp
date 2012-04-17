@@ -104,6 +104,9 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get the ip ,port name and client ID of the new user and store them locally.
                 if(status==NORMAL){
                     parser.senderInfo(newIP,newPort, newID);
+                    if(newID==C_ID){
+                        return 1;
+                    }
                     parser.joinName(newName);
                     memcpy(newUser.name,newName.c_str(),newName.size());
                     memcpy(newUser.ip, newIP.c_str(), newIP.size());
