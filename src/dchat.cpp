@@ -22,7 +22,10 @@
 #include "udp/udp.h"
 
 int mainRunning = 1;
+int uiRunning = 0;
 
+pthread_mutex_t uiMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t uiCond = PTHREAD_COND_INITIALIZER;
 
 int main(int argc, char *argv[])
 {
@@ -30,6 +33,8 @@ int main(int argc, char *argv[])
     int myPort, seqPort;
     dchatType myType;
     threadArgs tArgs;
+    pthread_t uiThread;
+    int threadRet;
 
     if (argc != 2 && argc != 3)
     {
@@ -90,17 +95,37 @@ int main(int argc, char *argv[])
     tArgs.myName = myName;
     tArgs.mainID = pthread_self();
 
-    pthread_t uiThread;
-    int threadRet;
 
     threadRet = pthread_create(&uiThread, NULL, uiInteract, (void*)&tArgs);
 
     sequencer aSeq(myName.c_str(), myIP.c_str(), myPort);
     chatClient aClnt(myName.c_str(), myIP.c_str(), myPort);
 
+
+    //release ui to run
+    pthread_mutex_lock(&uiMutex);
+    uiRunning = 1;
+    pthread_cond_signal(&uiCond);
+    pthread_mutex_unlock(&uiMutex);
+
     //message handling loop
     while (mainRunning)
     {
+        /*string test;
+        if (uiRunning == 0)
+        {
+            cout<<"main loop:";
+            cin>>test;
+        }
+        if (test == "run")
+        {
+            pthread_mutex_lock(&uiMutex);
+            uiRunning = 1;
+            pthread_cond_signal(&uiCond);
+            pthread_mutex_unlock(&uiMutex);
+
+        }*/
+
         if (myType == dServer)
         {
         }
@@ -135,7 +160,12 @@ void * uiInteract(void *args)
 
     msgSender.setRemoteAddr(outArgs->seqIP.c_str(), outArgs->seqPort);
 
-    while(running)
+    pthread_mutex_lock(&uiMutex);
+    while (!uiRunning)
+        pthread_cond_wait(&uiCond, &uiMutex);
+    pthread_mutex_unlock(&uiMutex);
+
+    while(uiRunning)
     {
         string input;
 
@@ -143,7 +173,7 @@ void * uiInteract(void *args)
         getline(cin, input);
         if (cin.eof() == 1)
         {
-            running = 0;
+            uiRunning = 0;
             mainRunning = 0;
             continue;
         }
