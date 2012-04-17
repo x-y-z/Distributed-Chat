@@ -288,6 +288,11 @@ int sequencer::sendMsgBCast()
 
 }
 
+void sequencer::printMemberList()
+{
+
+}
+
 /*int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
 {
         char gMsg[1024];

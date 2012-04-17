@@ -23,6 +23,9 @@
 
 int mainRunning = 1;
 int uiRunning = 0;
+int uiSuspend = 0;
+
+#define MAX_MSG_LEN 2048
 
 pthread_mutex_t uiMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t uiCond = PTHREAD_COND_INITIALIZER;
@@ -31,6 +34,7 @@ int main(int argc, char *argv[])
 {
     string myName, myIP, seqName, seqIP;
     int myPort, seqPort;
+    int myID, seqID;
     dchatType myType;
     threadArgs tArgs;
     pthread_t uiThread;
@@ -88,6 +92,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
     //get started
+    UDP listener(myPort);
+
+
     tArgs.seqIP = seqIP;
     tArgs.seqPort = seqPort;
     tArgs.myIP = myIP;
@@ -101,6 +108,18 @@ int main(int argc, char *argv[])
     sequencer aSeq(myName.c_str(), myIP.c_str(), myPort);
     chatClient aClnt(myName.c_str(), myIP.c_str(), myPort);
 
+    if (myType == dServer)
+    {
+        tArgs.myID = myID = aSeq.getID();
+        aSeq.printMemberList();
+        std::cout<<"Wait for others to join..."<<endl;
+
+    }
+    else // for client
+    {
+    }
+
+    
 
     //release ui to run
     pthread_mutex_lock(&uiMutex);
@@ -111,23 +130,15 @@ int main(int argc, char *argv[])
     //message handling loop
     while (mainRunning)
     {
-        /*string test;
-        if (uiRunning == 0)
-        {
-            cout<<"main loop:";
-            cin>>test;
-        }
-        if (test == "run")
-        {
-            pthread_mutex_lock(&uiMutex);
-            uiRunning = 1;
-            pthread_cond_signal(&uiCond);
-            pthread_mutex_unlock(&uiMutex);
+        char recvMsg[MAX_MSG_LEN];
+        int recvMsgLen;
 
-        }*/
+        recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
+                              myPort, myID);
 
         if (myType == dServer)
         {
+            aSeq.processMSG(recvMsg, recvMsgLen);
         }
         else if (myType == dClient)
         {
@@ -188,8 +199,12 @@ void * uiInteract(void *args)
         input = myName + ": " + input;
         //cout<<myName<<": "<<input<<endl;
         // send message to sequencer
-        msgMaker::serialize(outMsg, outMsgLen,
+        // no msg sending while election or special situation
+        if (!uiSuspend)
+        {
+            msgMaker::serialize(outMsg, outMsgLen,
                             aMaker.makeMsg(input.c_str(), input.size())); 
+        }
     }
 
     return 0;

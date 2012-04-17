@@ -48,6 +48,10 @@ public:
 public:
     int processMSG(const char *msg, int mlen);
 
+    int getID(){ return my_id;};
+
+    void printMemberList();
+
 private:
     //for join
     int newClientId(){ max_id++; return max_id - 1;}
