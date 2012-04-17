@@ -31,7 +31,7 @@ private:
     string name, s_ip;
     string IP;
     int port, C_ID, msgMaxCnt;
-    int  s_port, reSendCount;
+    int  s_port, reSendCount,s_id;
     int status;//0:initial, 1:waiting for Join ACK, 2:normal, 3:election
     bool next;
     myMsg msgToSend;
@@ -40,6 +40,9 @@ private:
     vector<peer> clientList; 
     queue<string> localMsgQ;
     queue<string> inMsgQ;
+    map<int,string> dspMsg;
+    map<int,string>::iterator it;
+    pair<map<char,int>::iterator,bool> msgT;
 public:
     chatClient(){};
     chatClient(string name, const string IP,const int port);
@@ -49,6 +52,7 @@ public:
     int processMSG(const char* msg, int mlen);
     int msgEnqueue(string msg);
     int sendBroadcastMsg(string msgContent);
+    void displayClients();
 private:
     int dojoin(string s_ip, int s_port);
     int addNewUser(string name, string newCIP, int newCPort, int newCID);

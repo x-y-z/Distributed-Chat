@@ -54,7 +54,7 @@ int chatClient::processMSG(const char* msg, int mlen)
     peer newUser;
     string newName, newIP, textmsg, outmsg;
     int newPort, newID;
-    int outlen;
+    int outlen,i;
     int seqNum =0;
     myMsg tempMsg;
     vector<peer>::iterator aIter;
@@ -136,7 +136,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                         }
                     }
                     //sequencer leaves
-                    if (newIP==s_ip) {
+                    if (newID==s_id) {
                         if(doElection()==1){
                             //this client itself is elected to be the sequencer
                             //setup and broadcast the "I am the leader" message.
@@ -169,7 +169,27 @@ int chatClient::processMSG(const char* msg, int mlen)
                         cerr<<"failed to get the message content! @"<<name<<endl;
                         exit(-1);
                     }
-                    cout<<textmsg<<endl;
+		    //normal case
+		    if(seqNum==(msgMaxCnt+1)){
+                    	cout<<textmsg<<endl;
+			msgMaxCnt++;
+	            }
+		    //receive duplicated message, ignore.
+		    else if(seqNum<(msgMaxCnt+1)){
+			//ignore;
+		    }
+		    //missed earlier messages, search & wait for retransimit.
+		    else if(seqNum>(msgMaxCnt+1)){
+			dspMsg.insert(pair<int,string>(seqNum,textmsg));
+			it = dspMsg.find((msgMaxCnt+1));			
+			while(it!=dspMsg.end()){
+				cout<<(*it).second<<endl;
+				dspMsg.erase(it);
+				msgMaxCnt++;
+				it = dspMsg.find((msgMaxCnt+1));
+			}	
+		    }
+		    
                     return 1;
                 }
                 else{
@@ -218,6 +238,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                 parser.senderInfo(newIP,newPort,newID);
                 s_ip = newIP;
                 s_port = newPort;
+		s_id = newID;
                 return 1;
                 break;
             default: //not used here.
@@ -331,4 +352,33 @@ int chatClient::doElection(){
         
         return -1;
     }
+}
+
+void chatClient::displayClients(){
+	int i=0;
+	bool printleader = true;
+	cout<<"Succeed, current users:"<<endl;
+	for(i=0;i<clientList.size();i++){
+		if(printleader){
+			if(clientList[i].id!=s_id){
+				continue;
+			}
+			else{
+				cout<<clientList[i].name<<" "<<clientList[i].ip<<":"<<clientList[i].port<<"  (leader)"<<endl;
+				i=0;
+				printleader=false;
+				continue;
+			}
+		}
+		else{
+			if(clientList[i].id==s_id){
+				continue;
+			}
+			else{
+				cout<<clientList[i].name<<" "<<clientList[i].ip<<":"<<clientList[i].port<<endl;
+			}
+
+		}
+		
+	}
 }
