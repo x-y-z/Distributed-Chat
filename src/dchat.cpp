@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
     {
         
         aClnt.dojoin(seqIP,seqPort);
+        tArgs.myID = myID = aClnt.getID();
     }
 
     
