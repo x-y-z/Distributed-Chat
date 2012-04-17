@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
         else if (myType == dClient)
         {
             int clientRV=0;
-            clientRV= aClnt.msgEnqueue(string(recvMsg));
+            clientRV= aClnt.msgEnqueue(recvMsg);
             
 	        if( clientRV==10){
                 myType = dServer;

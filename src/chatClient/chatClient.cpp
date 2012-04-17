@@ -27,11 +27,11 @@ chatClient::chatClient(string cname, string cIP,int cport){
 }
 //if return 10, change to sequencer
 //else return -10, stay as user.
-int chatClient::msgEnqueue(string msg){
-    string tempMsg;
+int chatClient::msgEnqueue(const char* msg){
+    string tempMsg(msg);
     int toReturn =0;
     bool skip = false;
-    inMsgQ.push(msg);
+    inMsgQ.push(tempMsg);
     //process the message queue until it's empty
     //blocking outter messages;
     while (!inMsgQ.empty()) {
