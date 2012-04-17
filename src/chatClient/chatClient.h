@@ -53,7 +53,9 @@ public:
     int msgEnqueue(string msg);
     int sendBroadcastMsg(string msgContent);
     void displayClients();
-    int dojoin(string s_ip, int s_port);    
+    int dojoin(string s_ip, int s_port); 
+    int getID();
+    vector<peer> getClientList();   
 private:
     int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);
