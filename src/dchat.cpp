@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
     }
     else // for client
     {
+        
+        aClnt.dojoin(seqIP,seqPort);
     }
 
     
@@ -142,6 +144,11 @@ int main(int argc, char *argv[])
         }
         else if (myType == dClient)
         {
+            
+	       if( aClnt.msgEnqueue(string(recvMsg))==10){
+
+           }
+
         }
     }
 
