@@ -225,10 +225,11 @@ int chatClient::processMSG(const char* msg, int mlen)
     }
 }
 
-int chatClient::dojoin(string s_ip, int s_port){
+int chatClient::dojoin(string rs_ip, int rs_port){
     string outmsg;
     int outlen, saddr_len;
-
+    s_ip = rs_ip;
+    s_port = rs_port;
     //setupt the UDP socket
     clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
     
