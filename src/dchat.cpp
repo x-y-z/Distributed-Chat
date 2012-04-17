@@ -152,25 +152,32 @@ int getAPortNum()
 void * uiInteract(void *args)
 {
     threadArgs *outArgs = (threadArgs *)args;
-    int running = 1;
     UDP msgSender;
     string myName = outArgs->myName;
     string myIP = outArgs->myIP;
     int myPort = outArgs->myPort;
+    int myID = outArgs->myID;
+    msgMaker aMaker;
 
+    aMaker.setInfo(myName, myIP, myPort, myID);
     msgSender.setRemoteAddr(outArgs->seqIP.c_str(), outArgs->seqPort);
 
+    //wait for main loop signal
     pthread_mutex_lock(&uiMutex);
     while (!uiRunning)
         pthread_cond_wait(&uiCond, &uiMutex);
     pthread_mutex_unlock(&uiMutex);
 
+    //running ui
     while(uiRunning)
     {
         string input;
+        string outMsg;
+        int outMsgLen;
 
         // get user input
         getline(cin, input);
+        // handle existing situation
         if (cin.eof() == 1)
         {
             uiRunning = 0;
@@ -178,10 +185,11 @@ void * uiInteract(void *args)
             continue;
         }
 
-        cout<<myName<<": "<<input<<endl;
+        input = myName + ": " + input;
+        //cout<<myName<<": "<<input<<endl;
         // send message to sequencer
-        // handle existing situation
-        
+        msgMaker::serialize(outMsg, outMsgLen,
+                            aMaker.makeMsg(input.c_str(), input.size())); 
     }
 
     return 0;
