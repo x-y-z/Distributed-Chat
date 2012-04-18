@@ -366,6 +366,7 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                     if (aParser.isACK())
                     {
                         //this client is clear
+                        closesocket((*iter).first);
                         sendList.erase(iter);
                         ackNum++;
                     }
@@ -393,6 +394,7 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                 if ((*iter).first < 0)
                 {
                     //this client is time out
+                    closesocket(-(*iter).first);
                     timeoutList.push_back((*iter).second);
                     ackNum++;
                 }

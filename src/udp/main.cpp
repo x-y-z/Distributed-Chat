@@ -10,12 +10,16 @@ int main()
     std::cin>>type;
 
 
-    if (type == 0)
+    if (type == 0)//server
     {
         struct sockaddr client;
         int c_len;
         char buf[255];
-        UDP server(S_PORT);
+	int port;
+
+	std::cout<<"port num:";
+	std::cin>>port;
+        UDP server(port);
         //int ret = server.recvFrom(buf, 255, &client, (socklen_t*)&c_len);
         int ret = server.recvFromNACK(buf, 255, "yanzi", 
                     "127.0.0.1", S_PORT, 1234);
@@ -28,7 +32,7 @@ int main()
             std::cerr<<"Timeout\n";
 
     }
-    else if (type == 1)
+    else if (type == 1)//client
     {
         //struct sockaddr_in svr;
         //int s_len;

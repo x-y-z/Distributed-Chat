@@ -108,13 +108,14 @@ msgType msgParser::msgTypeIs()
 
 }
 
-int msgParser::senderInfo(string &ip, int &port, int &id)
+int msgParser::senderInfo(string &ip, string &name, int &port, int &id)
 {
     if (init == false)
         return -1;
 
 
     ip.assign(_content.ip);
+    name.assign(_content.name);
     port = _content.port;
     id = _content.self_id;
     

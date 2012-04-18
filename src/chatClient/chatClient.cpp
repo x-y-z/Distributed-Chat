@@ -31,17 +31,15 @@ int chatClient::msgEnqueue(const char* msg, int len){
     string tempMsg(msg,len);
     int toReturn =0;
     bool skip = false;
-    cout<<"msg: "<<msg<<endl;
     inMsgQ.push(tempMsg);
-    cout<<"temp: "<<tempMsg<<endl;
+    std::cerr<<"get a message\n";
     //process the message queue until it's empty
     //blocking outter messages;
     while (!inMsgQ.empty()) {
-        cout<<"processing messages..."<<inMsgQ.size()<<" messages left"<<endl;
         tempMsg = inMsgQ.front();
-        cout<<"temp: "<<tempMsg<<endl;
         //if return 10, change to sequencer
         //else return -10, stay as user.
+        //std::cerr<<"processing a message\n";
         if(processMSG(tempMsg.c_str(),tempMsg.size())==10){
             toReturn=10;
         }
@@ -62,6 +60,8 @@ int chatClient::processMSG(const char* msg, int mlen)
     myMsg tempMsg;
     vector<peer>::iterator aIter;
     msgParser parser(msg, mlen);
+    
+    std::cerr<<parser.msgTypeIs()<<endl;
         
     if(parser.isACK()){
         //return 0;
@@ -73,9 +73,16 @@ int chatClient::processMSG(const char* msg, int mlen)
             case join:
                 if(status!=ELEC){
                     //setup and send a Navi message
+                    mmaker.setInfo(sname,s_ip, s_port,s_id);
                     tempMsg = mmaker.makeNavi();
                     msgMaker::serialize(outmsg,outlen,tempMsg);
+                    parser.senderInfo(newIP,newName,newPort,newID);
+                    
+                    clntUDP.setRemoteAddr(newIP.c_str(),newPort);
                     clntUDP.sendTo(outmsg.c_str(),outlen);
+                    
+                    clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
+                    mmaker.setInfo(name,IP, port,C_ID);
                     return 1;
                 }
                 else{
@@ -89,7 +96,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //the chatClient get a navi message, which means the one he asked is not the sequencer, and the info of the sequencer is returned via this message.
                 //get the info of the sequencer and send another join message to it.
                 
-                parser.senderInfo(newIP,newPort,newID);
+                parser.senderInfo(newIP, newName, newPort,newID);
                 dojoin(newIP, newPort);
                 return 1;
                 break;
@@ -97,8 +104,14 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get the peerlist and client_id decided by the sequencer and store them locally for future use.
                 
                 parser.joinFeedback(msgMaxCnt, C_ID, clientList);
+                parser.senderInfo(newIP,newName,newPort,newID);
+                s_id = newID;
+                s_ip = newIP;
+                s_port = newPort;
+                sname = newName;
                 //call the setInfo again so as to set the C_ID field
                 mmaker.setInfo(name,IP, port,C_ID);
+                displayClients();
                 status = NORMAL;
                 return 1;
                 break;
@@ -106,16 +119,18 @@ int chatClient::processMSG(const char* msg, int mlen)
             case join_broadcast:
                 //get the ip ,port name and client ID of the new user and store them locally.
                 if(status==NORMAL){
-                    parser.senderInfo(newIP,newPort, newID);
+                    parser.senderInfo(newIP, newName, newPort, newID);
                     if(newID==C_ID){
                         return 1;
                     }
                     parser.joinName(newName);
+                    memset(&newUser, 0, sizeof(peer));
                     memcpy(newUser.name,newName.c_str(),newName.size());
                     memcpy(newUser.ip, newIP.c_str(), newIP.size());
                     newUser.c_id = newID;
                     newUser.port = newPort;
                     clientList.push_back(newUser);
+                    cout<<"NOTICE "<<newUser.name<<" joined on "<<newUser.ip<<":"<<newUser.port<<endl;
                     return 1;
                 }
                 else{
@@ -129,16 +144,24 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //remove the specific user from the peer list
                 vector<peer> timeoutList;
                 if(status==NORMAL){
-                    parser.senderInfo(newIP,newPort,newID);
+                    parser.senderInfo(newIP, newName, newPort,newID);
                     
                     for(aIter = clientList.begin(); aIter != clientList.end(); aIter++){
                         if((*aIter).c_id==newID){
                             clientList.erase(aIter);
+                            cout<<"NOTICE "<<aIter->name<<" left the chat or crashed"<<endl;
                             break;
                         }
                     }
                     //sequencer leaves
                     if (newID==s_id) {
+                        for(aIter = clientList.begin(); aIter != clientList.end(); aIter++){
+                            if((*aIter).c_id==newID){
+                                clientList.erase(aIter);
+                                cout<<"NOTICE "<<aIter->name<<" left the chat or crashed"<<endl;
+                                break;
+                            }
+                        }
                         if(doElection()==1){
                             
                             return 10;
@@ -162,27 +185,28 @@ int chatClient::processMSG(const char* msg, int mlen)
                         cerr<<"failed to get the message content! @"<<name<<endl;
                         exit(-1);
                     }
-		    //normal case
-		    if(seqNum==(msgMaxCnt+1)){
-                    	cout<<textmsg<<endl;
-			msgMaxCnt++;
-	            }
-		    //receive duplicated message, ignore.
-		    else if(seqNum<(msgMaxCnt+1)){
-			//ignore;
-		    }
-		    //missed earlier messages, search & wait for retransimit.
-		    else if(seqNum>(msgMaxCnt+1)){
-			dspMsg.insert(pair<int,string>(seqNum,textmsg));
-			it = dspMsg.find((msgMaxCnt+1));			
-			while(it!=dspMsg.end()){
-				cout<<(*it).second<<endl;
-				dspMsg.erase(it);
-				msgMaxCnt++;
-				it = dspMsg.find((msgMaxCnt+1));
-			}	
-		    }
-		    
+                    
+                    //std::cerr<<"my max msg cnt is: "<<msgMaxCnt<<", but I got: "<<seqNum<<endl;
+                    //normal case
+                    if(seqNum==(msgMaxCnt+1)){
+                            cout<<textmsg<<endl;
+                            msgMaxCnt++;
+                        }
+                    //receive duplicated message, ignore.
+                    else if(seqNum<(msgMaxCnt+1)){
+                    //ignore;
+                    }
+                    //missed earlier messages, search & wait for retransimit.
+                    else if(seqNum>(msgMaxCnt+1)){
+                            dspMsg.insert(pair<int,string>(seqNum,textmsg));	
+                            it = dspMsg.find((msgMaxCnt+1));			
+                            while(it!=dspMsg.end()){
+                                    cout<<(*it).second<<endl;
+                                    dspMsg.erase(it);
+                                    msgMaxCnt++;
+                                    it = dspMsg.find((msgMaxCnt+1));
+                            }	
+                    }		    
                     return 1;
                 }
                 else{
@@ -193,9 +217,9 @@ int chatClient::processMSG(const char* msg, int mlen)
                 break;
             case election_req:{
                 //do BULLY
-                vector<peer> timeoutList;
+                //vector<peer> timeoutList;
                 status=ELEC;
-                parser.senderInfo(newIP,newPort,newID);
+                parser.senderInfo(newIP, newName, newPort,newID);
                 
                 if(C_ID>newID){
                     if(doElection()>0){
@@ -219,10 +243,11 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get and setup the info of the new sequencer
                 //here we just ignore the state which this client is in. Cause it's safe 
                 //to change the sequencer here.
-                parser.senderInfo(newIP,newPort,newID);
+                parser.senderInfo(newIP, newName, newPort,newID);
                 s_ip = newIP;
                 s_port = newPort;
-		s_id = newID;
+                s_id = newID;
+                sname = newName;
                 return 1;
                 break;
             default: //not used here.
@@ -277,13 +302,10 @@ int chatClient::sendBroadcastMsg(string msgContent){
                 localMsgQ.pop();
             }
             next=true;
-            if(doElection()>0){
-               
-                
-                
+            if(doElection()>0){    
                 return 10; 
             }
-            else return -1;
+            else return 1;
         }
         next = true;
     }
@@ -331,32 +353,31 @@ int chatClient::doElection(){
     }
 }
 
+void chatClient::doLeave(){
+    myMsg tempMsg = mmaker.makeLeave();
+    int outlen =0;
+    string outmsg ;
+    msgMaker::serialize(outmsg,outlen,tempMsg);
+    clntUDP.sendTo(outmsg.c_str(),outlen);
+    cout<<"user: "<<name<<" is about to exit..."<<endl;
+    exit(1);
+}
+
+//leader info need to be added into the clientList the sequencer returns via the Join_ACK message.
 void chatClient::displayClients(){
 	int i=0;
-	bool printleader = true;
-	cout<<"Succeed, current users:"<<endl;
-	for(i=0;i<clientList.size();i++){
-		if(printleader){
-			if(clientList[i].c_id!=s_id){
-				continue;
-			}
-			else{
-				cout<<clientList[i].name<<" "<<clientList[i].ip<<":"<<clientList[i].port<<"  (leader)"<<endl;
-				i=0;
-				printleader=false;
-				continue;
-			}
-		}
-		else{
-			if(clientList[i].c_id==s_id){
-				continue;
-			}
-			else{
-				cout<<clientList[i].name<<" "<<clientList[i].ip<<":"<<clientList[i].port<<endl;
-			}
-
-		}
-		
+	bool printleader = false;
+	cout<<"Succeed, current users("<<clientList.size()<<" users):"<<endl;
+    cout<<sname<<" "<<s_ip<<":"<<s_port<<" (leader)"<<endl;
+	for(i=0;i<clientList.size();i++){    
+        if(clientList[i].c_id==s_id){
+            cout<<"c_id: "<<clientList[i].c_id<<" s_id: "<<s_id<<endl;
+            cout<<"not print sequencer"<<endl;
+            continue;
+        }
+        else{
+            cout<<clientList[i].name<<" "<<clientList[i].ip<<":"<<clientList[i].port<<endl;
+        }		
 	}
 }
 int chatClient::getID(){

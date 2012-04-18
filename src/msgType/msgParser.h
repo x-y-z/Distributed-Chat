@@ -39,6 +39,7 @@ typedef struct messageStruct {
              //6 for MSG, 7 for MSG-broadcast, 
              //8 for election request, 9 for election OK, 10 leader broadcast.
     char ip[20];
+    char name[20];
     int port;
     int self_id;
     int msgLen;
@@ -107,7 +108,7 @@ public:
 public:
     bool isACK();
     msgType msgTypeIs();
-    int senderInfo(string &ip, int &port, int &id);
+    int senderInfo(string &ip, string &name, int &port, int &id);
     int joinName(string &name);
     int joinFeedback(int &msgMaxCnt, int &my_id, vector<peer> &peerlist); 
     int getMsg(string &text);

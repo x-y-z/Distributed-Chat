@@ -32,6 +32,9 @@ myMsg msgMaker::makeACK()
  
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -50,6 +53,9 @@ myMsg msgMaker::makeJoin(const string &name)
 
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -72,6 +78,9 @@ myMsg msgMaker::makeNavi()
   
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -91,6 +100,9 @@ myMsg msgMaker::makeJoinACK(int msgMaxCnt, int c_id,
     
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -125,6 +137,9 @@ myMsg msgMaker::makeJoinBCast(const string &name)
 
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -147,6 +162,9 @@ myMsg msgMaker::makeLeave()
 
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -164,6 +182,9 @@ myMsg msgMaker::makeLeaveBCast()
  
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -182,6 +203,9 @@ myMsg msgMaker::makeMsg(const char *msgCnt, int msgLen)
  
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -203,6 +227,9 @@ myMsg msgMaker::makeMsgBCast(const char *msgCnt, int msgLen, int seq_num)
   
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -226,6 +253,9 @@ myMsg msgMaker::makeElec()
    
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -243,6 +273,9 @@ myMsg msgMaker::makeElecOK()
    
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;
@@ -260,6 +293,9 @@ myMsg msgMaker::makeLeader(const string &name)
    
     assert(_ip.size() < 20);
     memcpy(tmp.ip, _ip.c_str(), _ip.size());
+    
+    assert(_name.size() < 20);
+    memcpy(tmp.name, _name.c_str(), _name.size());
 
     tmp.port = _port;
     tmp.self_id = _self_id;

@@ -19,6 +19,9 @@
 #include <string>
 #include <pthread.h>
 
+#include "chatClient/chatClient.h"
+#include "sequencer/sequencer.h"
+
 using namespace std;
 
 enum dchatType
@@ -36,6 +39,8 @@ typedef struct threadArgs{
     int seqPort;
     int seqID;
     pthread_t mainID;
+    sequencer *aSeq;
+    chatClient *aClnt;
 } threadArgs;
 
 int getAPortNum();

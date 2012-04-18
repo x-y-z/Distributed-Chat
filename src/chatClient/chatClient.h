@@ -28,7 +28,7 @@ using namespace std;
 class chatClient
 {
 private:
-    string name, s_ip;
+    string name, s_ip,sname;
     string IP;
     int port, C_ID, msgMaxCnt;
     int  s_port, reSendCount,s_id;
@@ -52,6 +52,7 @@ public:
     int processMSG(const char* msg, int mlen);
     int msgEnqueue(const char* msg, int len);
     int sendBroadcastMsg(string msgContent);
+    void doLeave();
     void displayClients();
     int dojoin(string s_ip, int s_port); 
     int getID();

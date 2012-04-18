@@ -24,7 +24,7 @@ sequencer::sequencer(const char* name, const char*ip, int port)
     my_ip.assign(ip);
     my_port = port;
     my_id = max_id;
-    max_id++;
+    //max_id++;
 
     /*peer self;
     strncpy(self.name, my_name.c_str(), my_name.size());
@@ -46,7 +46,7 @@ int sequencer::processMSG(const char *inMsg, int mlen)
             {
                 string name, ip;
                 int port, id;
-                aParser.senderInfo(ip, port, id);
+                aParser.senderInfo(ip, name, port, id);
                 aParser.joinName(name);
 
                 std::cout<<"NOTICE "<<name<<" joined on "
@@ -61,7 +61,7 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 //broadcast join
                 if (sendRes == 0)
                 {
-                    sendJoinBCast(ip, port, id, name);
+                    status = sendJoinBCast(ip, port, id, name);
                     status = 0;
                 }
                 else
@@ -70,9 +70,9 @@ int sequencer::processMSG(const char *inMsg, int mlen)
             break;
         case leave:
             {
-                string ip;
+                string ip, name;
                 int port, id;
-                aParser.senderInfo(ip, port, id);
+                aParser.senderInfo(ip, name, port, id);
                 //remove from client list
                 findAndDeletePeer(id);
                 //send leave broadcast
@@ -89,9 +89,9 @@ int sequencer::processMSG(const char *inMsg, int mlen)
             break;
         case msg:
             {
-                string ip;
+                string ip, name;
                 int port, id;
-                aParser.senderInfo(ip, port, id);
+                aParser.senderInfo(ip, name, port, id);
 
                 string recvMsg;
                 aParser.getMsg(recvMsg);
@@ -208,6 +208,7 @@ int sequencer::sendJoinBCast(const string &ip, int port, int id,
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
             findAndDeletePeer((*iter).c_id);
+            sendLeaveBCast((*iter).ip, (*iter).port, (*iter).c_id);
         }
 
         return -1;
@@ -253,7 +254,7 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
     }
 
     if (name.empty())
-        return -1;
+        return -4;
     
     aMaker.setInfo(name, ip, port, id);
 
@@ -271,6 +272,7 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
             findAndDeletePeer((*iter).c_id);
+            sendLeaveBCast((*iter).ip, (*iter).port, (*iter).c_id);
         }
 
         return -1;

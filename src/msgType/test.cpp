@@ -58,7 +58,7 @@ int main()
     cout<<"msg:"<<msg<<endl;
 
     msgParser aParser(msg.c_str(), mLen);
-    int b = aParser.senderInfo(ip, port, id);
+    int b = aParser.senderInfo(ip, name, port, id);
     msgType type = aParser.msgTypeIs();
     int a = aParser.joinName(name);
     

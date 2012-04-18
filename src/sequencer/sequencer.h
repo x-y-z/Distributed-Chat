@@ -59,10 +59,10 @@ public:
 
 private:
     //for join
-    int newClientId(){ max_id++; return max_id - 1;}
+    int newClientId(){ max_id++; return max_id;}
     int addToClientList(const string &name, const string &ip,
                         int port, int id);
-    int nextMsgCnt(){ msg_seq_id++; return msg_seq_id - 1; }
+    int nextMsgCnt(){ msg_seq_id++; return msg_seq_id; }
     int getMsgCurCnt(){ return msg_seq_id; }
     int sendJoinACK(const string &ip, int port, int id, int msgMaxCnt);
     int sendJoinBCast(const string &ip, int port, int id, const string &name);

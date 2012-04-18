@@ -24,7 +24,7 @@
 int mainRunning = 1;
 int uiRunning = 0;
 int uiSuspend = 0;
-
+dchatType myType;
 #define MAX_MSG_LEN 2048
 
 pthread_mutex_t uiMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     string myName, myIP, seqName, seqIP;
     int myPort, seqPort;
     int myID, seqID;
-    dchatType myType;
+    
     threadArgs tArgs;
     pthread_t uiThread;
     int threadRet;
@@ -107,6 +107,9 @@ int main(int argc, char *argv[])
 
     sequencer aSeq(myName.c_str(), myIP.c_str(), myPort);
     chatClient aClnt(myName.c_str(), myIP.c_str(), myPort);
+    
+    tArgs.aSeq = &aSeq;
+    tArgs.aClnt = &aClnt;
 
     if (myType == dServer)
     {
@@ -121,7 +124,7 @@ int main(int argc, char *argv[])
         
         aClnt.dojoin(seqIP,seqPort);
         tArgs.myID = myID = aClnt.getID();
-        aClnt.displayClients();
+        //aClnt.displayClients();
     }
 
     
@@ -138,6 +141,7 @@ int main(int argc, char *argv[])
         char recvMsg[MAX_MSG_LEN];
         int recvMsgLen;
         
+        std::cout<<"**Waiting for a new Msg**\n";
         recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
                               myPort, myID);
 
@@ -145,7 +149,7 @@ int main(int argc, char *argv[])
         {
             int pRet = aSeq.processMSG(recvMsg, recvMsgLen);
             if (pRet != 0)
-                std::cerr<<"something wrong\n";
+                std::cerr<<"something wrong:"<<pRet<<endl;
         }
         else if (myType == dClient)
         {
@@ -232,9 +236,17 @@ void * uiInteract(void *args)
         // no msg sending while election or special situation
         if (!uiSuspend)
         {
-            msgMaker::serialize(outMsg, outMsgLen,
-                            aMaker.makeMsg(input.c_str(), input.size())); 
-            msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+            
+            if(myType==dClient){
+                if(outArgs->aClnt->sendBroadcastMsg(input)==10){
+                    myType = dServer;
+                }
+            }
+            else{
+                msgMaker::serialize(outMsg, outMsgLen,
+                                    aMaker.makeMsg(input.c_str(), input.size())); 
+                msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+            }
         }
     }
 
