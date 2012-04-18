@@ -55,7 +55,7 @@ public:
 
     void printMemberList();
     
-    void setClientList(const vector<peer> &aList) {clientList = aList;};
+    int switchFromClient(const vector<peer> &aList, int myID, int maxMsgID);
 
 private:
     //for join
@@ -72,7 +72,9 @@ private:
     //for msg
     int putMsgInQ(const string &ip, int port, int id, const string &msg);
     int sendMsgBCast();
-
+    //for switch
+    int setClientList(const vector<peer> &aList) {clientList = aList;};
+    int sendLeaderBCast();
     //int waitForACK(const string &aMsg, int id, UDP &l_udp);
     
 };

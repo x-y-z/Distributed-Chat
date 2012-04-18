@@ -154,6 +154,13 @@ int main(int argc, char *argv[])
             
 	        if( clientRV==10){
                 myType = dServer;
+                myID = aClnt.getID();
+                vector<peer> peerList;
+                int maxMsgId = aClnt.getMaxCnt();
+
+                peerList = aClnt.getClientList();
+
+                aSeq.switchFromClient(peerList, myID, maxMsgId);
                 //switch to sequencer, and broadcast the " I am the leader " message
                 //(handle time out by deleting and broadcasting leave messages)
             } 
@@ -209,6 +216,12 @@ void * uiInteract(void *args)
         {
             uiRunning = 0;
             mainRunning = 0;
+            //send leave message
+            msgMaker::serialize(outMsg, outMsgLen,
+                                aMaker.makeLeave());
+            msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+
+
             pthread_cancel(mainPID);
             continue;
         }

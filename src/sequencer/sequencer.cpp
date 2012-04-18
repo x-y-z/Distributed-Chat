@@ -241,6 +241,9 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
 {
     string name("");
     msgMaker aMaker;
+
+    if (clientList.size() == 0)
+        return 0;
     
     vector<peer>::iterator iter;
     for (iter = clientList.begin(); iter != clientList.end(); iter++)
@@ -332,6 +335,45 @@ void sequencer::printMemberList()
     }
 }
 
+int sequencer::switchFromClient(const vector<peer> &aList, int myID, int maxMsgID)
+{
+    my_id = myID;
+    msg_seq_id = maxMsgID;
+    setClientList(aList);
+
+    return sendLeaderBCast();
+}
+int sequencer::sendLeaderBCast()
+{
+    msgMaker aMaker;
+    
+    vector<peer>::iterator iter;
+    
+    aMaker.setInfo(my_name, my_ip, my_port, my_id);
+
+    string aMsg;
+    int aMsg_len;
+    msgMaker::serialize(aMsg, aMsg_len, 
+                        aMaker.makeLeader(my_name));
+
+    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+                                    clientList);
+    if (timeoutList.size() == 0)
+        return 0;
+    else
+    {
+        for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
+        {
+            findAndDeletePeer((*iter).c_id);
+        }
+
+        return -1;
+    }
+
+    return -2;
+
+
+}
 /*int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
 {
         char gMsg[1024];
