@@ -223,11 +223,14 @@ void * uiInteract(void *args)
             uiRunning = 0;
             mainRunning = 0;
             //send leave message
-            msgMaker::serialize(outMsg, outMsgLen,
-                                aMaker.makeLeave());
-            msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
-
-
+            if(myType==dServer){    
+                msgMaker::serialize(outMsg, outMsgLen,
+                                    aMaker.makeLeave());
+                msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+            }
+            else{
+                outArgs->aClnt->doLeave();
+            }
             pthread_cancel(mainPID);
             continue;
         }
