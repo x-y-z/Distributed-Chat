@@ -35,9 +35,54 @@ enum seqStatus
     seqLeaveBCastTimeout,
     seqLeaveBCastNoClient,
     seqLeaveBCastNoName,
-    seqNotReach
+    seqNotReach,
+    seqMsgBCastTimeout,
+    seqMsgBCastNoClient,
+    seqUnexpectedMsg
 };
+/* 
+inline ostream& operator<<(ostream &o, const seqStatus &n)
+{,
+    seqJoinBCastFail,
+    seqLeaveGhost,
+    seqLeaveBCastTimeout,
+    seqLeaveBCastNoClient,
+    seqLeaveBCastNoName,
+    seqNotReach,
+    seqMsgBCastTimeout,
+    seqMsgBCastNoClient,
+    seqUnexpectedMsg
 
+    switch(n)
+    {
+        case seqSuccess:
+            return o<<"Seq Success";
+        case seqJoinACKFail:
+            return o<<"Navi";
+        case join_ack:
+            return o<<"Join-ACK";
+        case join_broadcast:
+            return o<<"Join-Broadcast";
+        case leave:
+            return o<<"Leave";
+        case leave_broadcast:
+            return o<<"Leave-Broadcast";
+        case msg:
+            return o<<"Message";
+        case msg_broadcast:
+            return o<<"Message-Broadcast";
+        case election_req:
+            return o<<"Election-Request";
+        case election_ok:
+            return o<<"Election-OK";
+        case leader_broadcast:
+            return o<<"I'm the leader";
+        case msgError:
+            return o<<"Msg Error";
+        default:
+            return o<<"invalid value";
+    }
+}*/
 class sequencer
 {
 private:

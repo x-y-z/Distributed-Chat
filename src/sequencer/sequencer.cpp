@@ -123,9 +123,13 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
                 {
                     status = seqSuccess;
                 }
-                else
+                else if (sendRes > 0)
                 {
-                    status = -1;
+                    status = seqMsgBCastTimeout;
+                }
+                else if (sendRes == -1)
+                {
+                    status = seqMsgBCastNoClient;
                 }
             }
             break;
@@ -146,11 +150,11 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
         case election_req:
             {
                 std::cerr<<"Unexpected election, ignored!\n";
-                status = -2;
+                status = seqUnexpectedMsg;
             }
             break;
         default:
-            status = -2;
+            status = seqUnexpectedMsg;
             break;
     }
 
@@ -311,6 +315,8 @@ int sequencer::putMsgInQ(const string &ip, int port, int id, const string &msg)
 
 int sequencer::sendMsgBCast()
 {
+    if (clientList.size() == 0)
+        return -1;
     //remember to add msg_seq_num
     int msgGlobalNum = nextMsgCnt();
     string bMsg = _MsgQ.front();
