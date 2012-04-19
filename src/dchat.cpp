@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
     {
         
         aClnt.dojoin(seqIP,seqPort);
+        tArgs.seqIP = seqIP;
+        tArgs.seqPort = seqPort;
         tArgs.myID = myID = aClnt.getID();
         //aClnt.displayClients();
     }

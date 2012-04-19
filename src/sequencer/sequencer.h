@@ -26,6 +26,17 @@
 
 using namespace std;
 
+enum seqStatus
+{
+    seqSuccess,
+    seqJoinACKFail,
+    seqJoinBCastFail,
+    seqLeaveGhost,
+    seqLeaveBCastTimeout,
+    seqLeaveBCastNoClient,
+    seqLeaveBCastNoName,
+    seqNotReach
+};
 
 class sequencer
 {
@@ -46,7 +57,7 @@ public:
     sequencer(const char* name, const char*ip, int port);
     ~sequencer(){};
 public:
-    int processMSG(const char *msg, int mlen);
+    seqStatus processMSG(const char *msg, int mlen);
 
     int getID(){ return my_id;};
     void setID(int aID){ my_id = aID; max_id = aID + 1;};

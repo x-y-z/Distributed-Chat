@@ -34,10 +34,10 @@ sequencer::sequencer(const char* name, const char*ip, int port)
     clientList.push_back(self);*/
 }
 
-int sequencer::processMSG(const char *inMsg, int mlen)
+seqStatus sequencer::processMSG(const char *inMsg, int mlen)
 {
     msgParser aParser(inMsg, mlen);
-    int status = 0;
+    seqStatus status = seqSuccess;
     std::cerr<<"got a message:"<<aParser.msgTypeIs()<<endl;
 
     switch (aParser.msgTypeIs())
@@ -61,11 +61,14 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 //broadcast join
                 if (sendRes == 0)
                 {
-                    status = sendJoinBCast(ip, port, id, name);
-                    status = 0;
+                    sendRes = sendJoinBCast(ip, port, id, name);
+                    if (sendRes == 0)
+                        status = seqSuccess;
+                    else
+                        status = seqJoinBCastFail;
                 }
                 else
-                    status = -1;
+                    status = seqJoinACKFail;
             }
             break;
         case leave:
@@ -74,16 +77,33 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 int port, id;
                 aParser.senderInfo(ip, name, port, id);
                 //remove from client list
-                findAndDeletePeer(id);
+                int findRet = findAndDeletePeer(id);
+                if (findRet == -1)
+                {
+                    status = seqLeaveGhost;
+                    break;
+                }
                 //send leave broadcast
                 int sendRes = sendLeaveBCast(ip, port, id);
                 if (sendRes == 0)
                 {
-                    status = 0;
+                    status = seqSuccess;
                 }
-                else
+                else if (sendRes > 0)
                 {
-                    status = -1;
+                    status = seqLeaveBCastTimeout;
+                }
+                else if (sendRes == -1)
+                {
+                    status = seqLeaveBCastNoClient;
+                }
+                else if (sendRes == -2)
+                {
+                    status = seqLeaveBCastNoName;
+                }
+                else if (sendRes == -3)
+                {
+                    status = seqNotReach;
                 }
             }
             break;
@@ -101,7 +121,7 @@ int sequencer::processMSG(const char *inMsg, int mlen)
                 int sendRes = sendMsgBCast();
                 if (sendRes == 0)
                 {
-                    status = 0;
+                    status = seqSuccess;
                 }
                 else
                 {
@@ -245,7 +265,7 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
     msgMaker aMaker;
 
     if (clientList.size() == 0)
-        return 0;
+        return -1;//no clients
     
     vector<peer>::iterator iter;
     for (iter = clientList.begin(); iter != clientList.end(); iter++)
@@ -255,7 +275,7 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
     }
 
     if (name.empty())
-        return -4;
+        return -2;//no name for this client
     
     aMaker.setInfo(name, ip, port, id);
 
@@ -267,7 +287,7 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
     vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
-        return 0;
+        return 0;//OK
     else
     {
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
@@ -276,10 +296,10 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
             sendLeaveBCast((*iter).ip, (*iter).port, (*iter).c_id);
         }
 
-        return -1;
+        return timeoutList.size();//how many time out
     }
 
-    return -2;
+    return -3;//not reachable
 
 }
 
@@ -323,7 +343,7 @@ int sequencer::sendMsgBCast()
             findAndDeletePeer((*iter).c_id);
         }
         std::cerr<<endl;
-        status = -1;
+        status = timeoutList.size();
     }
 
     std::cout<<bMsg<<endl;
