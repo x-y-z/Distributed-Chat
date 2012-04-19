@@ -1,6 +1,7 @@
 #include "udp.h"
 #include <iostream>
 #include <sys/time.h>
+#include <pthread.h>
 
 
 UDP::UDP(int port)
@@ -292,6 +293,16 @@ int UDP::recvFromNACK(void *msg, size_t size,
     return rRet;
 }
 
+vector<peer> UDP::multiCastNACK_T(const void *msg, size_t size,
+                                const vector<peer> &clntList)
+{
+    //create threads, use an array storing clntList
+    //each thread takes in charge of sending, resending, and return result
+    //use pthread_exit to return normal/timeout result
+    //use pthread_join to collect result
+    //return result
+
+}
 vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                                 const vector<peer> &clntList)
 {
@@ -319,6 +330,9 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
         }
 
         sendList[newSock] = clntList[i];
+        std::cerr<<"message broadcast:\n"<<"Socket:"<<newSock
+                 <<" for "<<clntList[i].name<<" with id:"<<clntList[i].c_id
+                 <<", with ip:"<<clntList[i].ip<<":"<<clntList[i].port<<endl;
     }
 
     map<SOCKET, peer>::iterator iter;
@@ -387,6 +401,8 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                     if (aParser.isACK())
                     {
                         //this client is clear
+                        std::cerr<<"Close socket:"<<(*iter).first
+                                 <<" for ack recved\n";
                         closesocket((*iter).first);
                         FD_CLR((*iter).first, &socks);
                         sendList.erase(iter);
@@ -416,6 +432,8 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                 if ((*iter).first < 0)
                 {
                     //this client is time out
+                    std::cerr<<"Close socket:"<<(*iter).first
+                             <<" for timeout\n";
                     closesocket(-(*iter).first);
                     FD_CLR(-(*iter).first, &socks);
                     sendList.erase(iter);
