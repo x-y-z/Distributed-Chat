@@ -175,8 +175,9 @@ int sequencer::sendJoinACK(const string &ip, int port, int id, int msgMaxCnt)
     msgMaker::serialize(aMsg, aMsg_len, 
                         aMaker.makeJoinACK(msgMaxCnt, id, clientList));
 
-    _udp.setRemoteAddr(ip.c_str(), port);
-    waitRes = _udp.sendToNACK(aMsg.c_str(), aMsg.size());
+    UDP joinACKUDP;
+    joinACKUDP.setRemoteAddr(ip.c_str(), port);
+    waitRes = joinACKUDP.sendToNACK(aMsg.c_str(), aMsg.size());
     
     if (waitRes == -2)//lost remote
     {

@@ -109,6 +109,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                 s_ip = newIP;
                 s_port = newPort;
                 sname = newName;
+                clntUDP.setRemoteAddr(s_ip.c_str(), s_port);
                 //call the setInfo again so as to set the C_ID field
                 mmaker.setInfo(name,IP, port,C_ID);
                 displayClients();
