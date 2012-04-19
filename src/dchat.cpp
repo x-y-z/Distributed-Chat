@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 
         if (myType == dServer)
         {
-            int pRet = aSeq.processMSG(recvMsg, recvMsgLen);
+            seqStatus pRet = aSeq.processMSG(recvMsg, recvMsgLen);
             if (pRet != 0)
                 std::cerr<<"something wrong:"<<pRet<<endl;
         }
