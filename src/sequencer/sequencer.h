@@ -40,49 +40,40 @@ enum seqStatus
     seqMsgBCastNoClient,
     seqUnexpectedMsg
 };
-/* 
 inline ostream& operator<<(ostream &o, const seqStatus &n)
-{,
-    seqJoinBCastFail,
-    seqLeaveGhost,
-    seqLeaveBCastTimeout,
-    seqLeaveBCastNoClient,
-    seqLeaveBCastNoName,
-    seqNotReach,
-    seqMsgBCastTimeout,
-    seqMsgBCastNoClient,
-    seqUnexpectedMsg
+{
+    
 
     switch(n)
     {
         case seqSuccess:
-            return o<<"Seq Success";
+            return o<<"Seq: Success";
         case seqJoinACKFail:
-            return o<<"Navi";
-        case join_ack:
-            return o<<"Join-ACK";
-        case join_broadcast:
-            return o<<"Join-Broadcast";
-        case leave:
-            return o<<"Leave";
-        case leave_broadcast:
-            return o<<"Leave-Broadcast";
-        case msg:
-            return o<<"Message";
-        case msg_broadcast:
-            return o<<"Message-Broadcast";
-        case election_req:
-            return o<<"Election-Request";
-        case election_ok:
-            return o<<"Election-OK";
-        case leader_broadcast:
-            return o<<"I'm the leader";
-        case msgError:
-            return o<<"Msg Error";
+            return o<<"Seq: Join ACK Fail";
+        case seqJoinBCastFail:
+            return o<<"Seq: Join BCast Fail";
+        case seqLeaveGhost:
+            return o<<"Seq: A Ghost Left";
+        case seqLeaveBCastTimeout:
+            return o<<"Seq: Leave BCast some time out";
+        case seqLeaveBCastNoClient:
+            return o<<"Seq: Leave BCast No Client";
+        case seqLeaveBCastNoName:
+            return o<<"Seq: Leave BCast No name for leaver";
+        case seqNotReach:
+            return o<<"Seq: Not reachable code";
+        case seqMsgBCastTimeout:
+            return o<<"Seq: Msg BCast some time out";
+        case seqMsgBCastNoClient:
+            return o<<"Seq: Msg BCast No Client";
+        case seqUnexpectedMsg:
+            return o<<"Seq: Unexpected Message";
+        //case msgError:
+        //    return o<<"Msg Error";
         default:
             return o<<"invalid value";
     }
-}*/
+}
 class sequencer
 {
 private:
@@ -123,8 +114,8 @@ private:
     int sendJoinACK(const string &ip, int port, int id, int msgMaxCnt);
     int sendJoinBCast(const string &ip, int port, int id, const string &name);
     //for leave
-    int findAndDeletePeer(int id);
-    int sendLeaveBCast(const string &ip, int port, int id);
+    peer findAndDeletePeer(int id);
+    int sendLeaveBCast(const peer &someOne);
     //for msg
     int putMsgInQ(const string &ip, int port, int id, const string &msg);
     int sendMsgBCast();

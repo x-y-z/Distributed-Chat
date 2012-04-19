@@ -77,14 +77,15 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
                 int port, id;
                 aParser.senderInfo(ip, name, port, id);
                 //remove from client list
-                int findRet = findAndDeletePeer(id);
-                if (findRet == -1)
+                peer findRet = findAndDeletePeer(id);
+                std::cout<<"I delete:"<<findRet<<endl;
+                if (findRet.port == -1)
                 {
                     status = seqLeaveGhost;
                     break;
                 }
                 //send leave broadcast
-                int sendRes = sendLeaveBCast(ip, port, id);
+                int sendRes = sendLeaveBCast(findRet);
                 if (sendRes == 0)
                 {
                     status = seqSuccess;
@@ -232,8 +233,8 @@ int sequencer::sendJoinBCast(const string &ip, int port, int id,
         vector<peer>::iterator iter;
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
-            findAndDeletePeer((*iter).c_id);
-            sendLeaveBCast((*iter).ip, (*iter).port, (*iter).c_id);
+            peer aTimeOut = findAndDeletePeer((*iter).c_id);
+            sendLeaveBCast(aTimeOut);
         }
 
         return -1;
@@ -243,9 +244,10 @@ int sequencer::sendJoinBCast(const string &ip, int port, int id,
 }
 
 
-int sequencer::findAndDeletePeer(int id)
+peer sequencer::findAndDeletePeer(int id)
 {
     vector<peer>::iterator iter;
+    peer aRet = {"ghost", "hell", -1, -999};
 
     for (iter = clientList.begin(); iter != clientList.end(); iter++)
     {
@@ -253,41 +255,32 @@ int sequencer::findAndDeletePeer(int id)
         {
             std::cout<<"NOTICE "<<(*iter).name<<" left the chat or crashed"
                      <<endl;
+            aRet = (*iter);
             clientList.erase(iter);
-            return 0;
+            return aRet;
         }
     }
 
-    return -1;//not found
+    return aRet;//not found
 
 }
 
 
-int sequencer::sendLeaveBCast(const string &ip, int port, int id)
+int sequencer::sendLeaveBCast(const peer &someOne)
 {
-    string name("");
     msgMaker aMaker;
 
     if (clientList.size() == 0)
         return -1;//no clients
-    
-    vector<peer>::iterator iter;
-    for (iter = clientList.begin(); iter != clientList.end(); iter++)
-    {
-        if ((*iter).c_id == id)
-            name = (*iter).name;
-    }
-
-    if (name.empty())
-        return -2;//no name for this client
-    
-    aMaker.setInfo(name, ip, port, id);
+    std::cout<<"I send leave bcast:"<<someOne;
+    aMaker.setInfo(someOne.name, someOne.ip, someOne.port, someOne.c_id);
 
     string aMsg;
     int aMsg_len;
     msgMaker::serialize(aMsg, aMsg_len, 
                         aMaker.makeLeaveBCast());
 
+    vector<peer>::iterator iter;
     vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
@@ -296,8 +289,8 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
     {
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
-            findAndDeletePeer((*iter).c_id);
-            sendLeaveBCast((*iter).ip, (*iter).port, (*iter).c_id);
+            peer aTimeOut = findAndDeletePeer((*iter).c_id);
+            sendLeaveBCast(aTimeOut);
         }
 
         return timeoutList.size();//how many time out
@@ -336,19 +329,20 @@ int sequencer::sendMsgBCast()
                                     clientList);
     if (timeoutList.size() == 0)
     {
-        std::cerr<<"msgBroadcast: all recved\n";
+        //std::cerr<<"msgBroadcast: all recved\n";
         status = 0;
     }
     else
     {
-        std::cerr<<"msgBroadcast: some lost:";
+        //std::cerr<<"msgBroadcast: some lost:";
         vector<peer>::iterator iter;
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
-            std::cerr<<(*iter).name<<", ";
-            findAndDeletePeer((*iter).c_id);
+            //std::cerr<<(*iter).name<<", ";
+            peer aTimeOut = findAndDeletePeer((*iter).c_id);
+            sendLeaveBCast(aTimeOut);
         }
-        std::cerr<<endl;
+        //std::cerr<<endl;
         status = timeoutList.size();
     }
 
