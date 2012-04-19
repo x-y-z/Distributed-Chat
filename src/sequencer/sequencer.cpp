@@ -199,7 +199,7 @@ int sequencer::sendJoinBCast(const string &ip, int port, int id,
     msgMaker::serialize(aMsg, aMsg_len, 
                         aMaker.makeJoinBCast(name));
 
-    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+    vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
         return 0;
@@ -264,7 +264,7 @@ int sequencer::sendLeaveBCast(const string &ip, int port, int id)
     msgMaker::serialize(aMsg, aMsg_len, 
                         aMaker.makeLeaveBCast());
 
-    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+    vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
         return 0;
@@ -306,7 +306,7 @@ int sequencer::sendMsgBCast()
                         aMaker.makeMsgBCast(bMsg.c_str(), bMsg.size(),
                                             msgGlobalNum));
 
-    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+    vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
     {
@@ -364,7 +364,7 @@ int sequencer::sendLeaderBCast()
     msgMaker::serialize(aMsg, aMsg_len, 
                         aMaker.makeLeader(my_name));
 
-    vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
+    vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
         return 0;

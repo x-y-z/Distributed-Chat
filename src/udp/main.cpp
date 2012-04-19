@@ -68,7 +68,7 @@ int main()
 
         UDP client;
         std::cin>>buf;
-        sList = client.multiCastNACK(buf, strlen(buf), sList);
+        sList = client.multiCastNACK_T(buf, strlen(buf), sList);
 
         for (int i = 0; i < sList.size(); i++)
         {

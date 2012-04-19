@@ -293,14 +293,147 @@ int UDP::recvFromNACK(void *msg, size_t size,
     return rRet;
 }
 
-vector<peer> UDP::multiCastNACK_T(const void *msg, size_t size,
+
+void *uniCast(void *arg)
+{
+    multiCastMsg *myArg = (multiCastMsg *)arg;
+    int sRet, rRet;
+    char rMsg[255];
+    int finished = -1;
+
+    while (finished <= 0)
+    {
+        struct sockaddr_in remoteAddr;
+        int rLen;
+        remoteAddr = UDP::fromAddrToSock(myArg->myInfo.ip, 
+                                    myArg->myInfo.port);
+        rLen = sizeof(remoteAddr);
+
+        sRet = sendto(myArg->mySock, myArg->msg, myArg->mSize, 0,
+                      (sockaddr *)&remoteAddr, (socklen_t)rLen);
+        if (sRet < 0)
+        {
+            std::cerr<<"sendToNACK: sending error\n";
+            exit(1);
+        }
+
+        //wait for ACK
+        struct timeval tv;
+
+        tv.tv_sec = 3;  /*  30 Secs Timeout */
+        tv.tv_usec = 0;
+
+        fd_set socks;
+        FD_ZERO(&socks);
+        FD_SET(myArg->mySock, &socks);
+
+        if (select(myArg->mySock + 1, &socks, NULL, NULL, &tv))
+        {
+            char rMsg[255];
+            int msgLen = recvfrom(myArg->mySock, rMsg, 
+                                  255, 0, NULL, NULL);
+
+            if (msgLen <= 0)
+            {
+                std::cerr<<"multiCast: recv ACK error\n";
+                exit(1);
+            }
+
+            msgParser aParser(rMsg, msgLen);
+            if (aParser.isACK())
+            {
+                finished = 100;
+                //ACK received
+            }
+            else
+            {
+                std::cerr<<"multiCast: not ACK package, unexpected\n";
+                exit(1);
+            }
+        }
+        else
+        {
+            finished++;
+        }
+    }
+
+    if (finished == 100)
+        myArg->ret = 0;
+    else
+        myArg->ret = -1;
+
+    closesocket(myArg->mySock);
+
+    pthread_exit((void *)&((*myArg).ret));
+}
+
+vector<peer> UDP::multiCastNACK_T(const char *msg, size_t size,
                                 const vector<peer> &clntList)
 {
+    multiCastMsg *argList;
+    pthread_t *idList;
+    pthread_attr_t attr;
+    vector<peer> timeoutList;
+
+    argList = new multiCastMsg[clntList.size()];
+    idList = new pthread_t[clntList.size()];
+
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    //initialize all socket
+    for (int i = 0; i < clntList.size(); ++i)
+    {
+        struct protoent *ptrp;
+
+        ptrp = getprotobyname("udp");
+        if (ptrp == 0)
+        {
+            std::cerr<<"cannot map \"udp\" to protocol number\n";
+            exit(1);
+        }
+
+        argList[i].mySock = socket(PF_INET, SOCK_DGRAM, ptrp->p_proto);
+        if (argList[i].mySock < 0)
+        {
+            std::cerr<<"socket creation failed\n";
+            exit(1);
+        }
+
+        argList[i].myInfo = clntList[i];
+        argList[i].msg = msg;
+        argList[i].mSize = size;
+
+        std::cerr<<"message broadcast:\n"<<"Socket:"<<argList[i].mySock
+                 <<" for "<<clntList[i].name<<" with id:"<<clntList[i].c_id
+                 <<", with ip:"<<clntList[i].ip<<":"<<clntList[i].port<<endl;
+
+        int rc = pthread_create(&idList[i], &attr, uniCast, &(argList[i]));
+        if (rc)
+        {
+            std::cerr<<"multiCast: return code from pthread_create is:"
+                     <<rc<<std::endl;
+        }
+    }
     //create threads, use an array storing clntList
+    
+    pthread_attr_destroy(&attr);
     //each thread takes in charge of sending, resending, and return result
     //use pthread_exit to return normal/timeout result
     //use pthread_join to collect result
+    for (int i = 0; i < clntList.size(); ++i)
+    {
+        int *status;
+        int rc = pthread_join(idList[i], (void **)&status);
+
+        if (*status == -1)
+        {
+            timeoutList.push_back(argList[i].myInfo);
+        }
+
+    }
     //return result
+    return timeoutList;
 
 }
 vector<peer> UDP::multiCastNACK(const void *msg, size_t size,

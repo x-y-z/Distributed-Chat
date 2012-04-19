@@ -33,6 +33,14 @@ enum udp_state
     all_done
 };
 
+typedef struct multiCastMsg{
+    SOCKET mySock;
+    peer myInfo;
+    const char *msg;
+    int mSize;
+    int ret;
+} multiCastMsg;
+
 class UDP
 {
 public:
@@ -71,7 +79,7 @@ public:
                       const string &name, const string &ip,
                       int port, int id);
     //broadcast and wait for ACK
-    vector<peer> multiCastNACK_T(const void *msg, size_t size, 
+    vector<peer> multiCastNACK_T(const char *msg, size_t size, 
                 const vector<peer> &clntList);
     vector<peer> multiCastNACK(const void *msg, size_t size, 
                 const vector<peer> &clntList);

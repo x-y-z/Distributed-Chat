@@ -344,7 +344,7 @@ int chatClient::doElection(){
     int outlen;
     tempMsg = mmaker.makeElec();
     msgMaker::serialize(outmsg,outlen,tempMsg);
-    vector<peer> timeoutClients =  clntUDP.multiCastNACK(outmsg.c_str(), outlen, clientList);
+    vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
     //vector<peer> timeoutClients;
     if(timeoutClients.empty()){
         status= NORMAL;
