@@ -369,6 +369,16 @@ int sequencer::switchFromClient(const vector<peer> &aList, int myID, int maxMsgI
     msg_seq_id = maxMsgID;
     setClientList(aList);
 
+    vector<peer>::iterator iter;
+    for (iter = clientList.begin(); iter != clientList.end(); iter++)
+    {
+        if ((*iter).c_id == my_id)
+        {
+            clientList.erase(iter);
+            break;
+        }
+    }
+
     return sendLeaderBCast();
 }
 int sequencer::sendLeaderBCast()
@@ -392,7 +402,8 @@ int sequencer::sendLeaderBCast()
     {
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
-            findAndDeletePeer((*iter).c_id);
+            peer aTimeOut = findAndDeletePeer((*iter).c_id);
+            sendLeaveBCast(aTimeOut);
         }
 
         return -1;

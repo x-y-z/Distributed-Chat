@@ -44,6 +44,8 @@ int main()
         UDP client;
         client.setRemoteAddr("127.0.0.1", S_PORT);
 
+        client.updateSocket("127.0.0.1", S_PORT);
+
         int ret = client.sendToNACK(buf, strlen(buf));
         if (ret == -1)
         {
