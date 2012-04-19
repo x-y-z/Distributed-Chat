@@ -226,7 +226,7 @@ int sequencer::findAndDeletePeer(int id)
     {
         if ((*iter).c_id == id)
         {
-            std::cout<<"NOTICE "<<(*iter).name<<"left the chat or crashed"
+            std::cout<<"NOTICE "<<(*iter).name<<" left the chat or crashed"
                      <<endl;
             clientList.erase(iter);
             return 0;
@@ -308,15 +308,20 @@ int sequencer::sendMsgBCast()
     vector<peer> timeoutList = _udp.multiCastNACK(aMsg.c_str(), aMsg.size(),
                                     clientList);
     if (timeoutList.size() == 0)
+    {
+        std::cerr<<"msgBroadcast: all recved\n";
         status = 0;
+    }
     else
     {
+        std::cerr<<"msgBroadcast: some lost:";
         vector<peer>::iterator iter;
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
+            std::cerr<<(*iter).name<<", ";
             findAndDeletePeer((*iter).c_id);
         }
-
+        std::cerr<<endl;
         status = -1;
     }
 

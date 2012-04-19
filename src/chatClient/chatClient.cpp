@@ -262,13 +262,14 @@ int chatClient::dojoin(string rs_ip, int rs_port){
     s_ip = rs_ip;
     s_port = rs_port;
     //setupt the UDP socket
-    clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
+    UDP joinUDP;
+    joinUDP.setRemoteAddr(s_ip.c_str(),s_port);
     
     //args: sequencer's ip, port, myIP, myPort,myName;
     myMsg message = mmaker.makeJoin(name);
     msgMaker::serialize(outmsg, outlen, message);    
         
-    if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+    if(joinUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
         cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
         exit(-1);
     }
@@ -292,7 +293,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
         }
         tempMsg = localMsgQ.front();
         localMsgQ.pop();
-        myMsg message = mmaker.makeMsg(tempMsg.c_str(),msgContent.size());
+        myMsg message = mmaker.makeMsg(tempMsg.c_str(),tempMsg.size());
         msgMaker::serialize(outmsg, outlen, message);
         next=false;
         //if timeout, clear local message queue and do election.

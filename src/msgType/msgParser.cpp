@@ -146,6 +146,7 @@ int msgParser::joinFeedback(int &msgMaxCnt, int &my_id, vector<peer> &peerlist)
 
     peerNum = (_content.msgLen - 2*sizeof(int))/sizeof(peer);
 
+    peerlist.clear();
     for (int i = 0; i < peerNum; ++i)
     {
         peerlist.push_back(pList[i]);

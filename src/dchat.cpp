@@ -181,7 +181,7 @@ int getAPortNum()
 {
     int portNum = 0;
     srand(time(NULL));
-    portNum = rand() % 500 + 1025;
+    portNum = rand() % 500 + 5000;
 
     return portNum;
 }

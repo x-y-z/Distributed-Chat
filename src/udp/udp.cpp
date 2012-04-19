@@ -36,6 +36,8 @@ UDP::UDP(int port)
         exit(1);
     }
 
+    init = true;
+
 }
 
 UDP::UDP(struct sockaddr_in addr)
@@ -60,7 +62,7 @@ UDP::UDP(struct sockaddr_in addr)
         exit(1);
     }
 
-
+    init = true;
 }
 
 struct sockaddr_in UDP::fromAddrToSock(const char *host, const int port)
@@ -124,6 +126,11 @@ void UDP::setRemoteAddr(struct sockaddr_in addr)
 
 void UDP::setRemoteAddr(const char *host, int port)
 {
+    if (init == true)
+    {
+        std::cerr<<"UDP: do not set remote addr twice\n";
+        exit(1);
+    }
     _remote = fromAddrToSock(host, port);
     _r_len = sizeof(_remote);
     struct protoent *ptrp;
@@ -143,13 +150,14 @@ void UDP::setRemoteAddr(const char *host, int port)
         std::cerr<<"socket creation failed\n";
         exit(1);
     }
+    init = true;
 
 }
 
 int UDP::sendTo(const void *msg, size_t size,
                 const struct sockaddr_in *dest, socklen_t dest_len)
 {
-    if (_socket == 0)
+    if (_socket == 0 || init == false)
     {
         std::cerr<<"sendTo: socket not initialized\n";
         return -1;
@@ -166,7 +174,7 @@ int UDP::sendTo(const void *msg, size_t size)
 int UDP::recvFrom(void *msg, size_t size,
                   struct sockaddr_in *src, socklen_t *src_len)
 {
-    if (_socket == 0)
+    if (_socket == 0 || init == false)
     {
         std::cerr<<"recvFrom: socket not initialized\n";
         return -1;
@@ -323,8 +331,14 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                                     (*iter).second.port);
         rLen = sizeof(remoteAddr);
 
-        sendto((*iter).first, msg, size, 0, 
+        int sRet = sendto((*iter).first, msg, size, 0, 
                (sockaddr*)&remoteAddr, rLen);
+
+        if (sRet < 0)
+        {
+            std::cerr<<"multiCast: send error\n";
+            exit(1);
+        }
     }
     //wait for ack
     struct timeval tv;
@@ -350,6 +364,13 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
 
         if ((selectNum = select(nfds + 1, &socks, NULL, NULL, &tv)) != 0)
         {
+            if (selectNum == -1)
+            {
+                std::cerr<<"UDP: select error\n";
+                exit(1);
+            }
+            std::cerr<<"UDP:- There are "<<selectNum<<" out of "
+                     <<expectedNum<<" responses!\n";
             for (iter = sendList.begin(); iter != sendList.end(); iter++)
             {
                 if (FD_ISSET((*iter).first, &socks))
@@ -367,6 +388,7 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                     {
                         //this client is clear
                         closesocket((*iter).first);
+                        FD_CLR((*iter).first, &socks);
                         sendList.erase(iter);
                         ackNum++;
                     }
@@ -395,6 +417,8 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                 {
                     //this client is time out
                     closesocket(-(*iter).first);
+                    FD_CLR(-(*iter).first, &socks);
+                    sendList.erase(iter);
                     timeoutList.push_back((*iter).second);
                     ackNum++;
                 }
@@ -406,8 +430,13 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                                                 (*iter).second.port);
                     rLen = sizeof(remoteAddr);
 
-                    sendto((*iter).first, msg, size, 0, 
+                    int sRet = sendto((*iter).first, msg, size, 0, 
                            (sockaddr*)&remoteAddr, rLen);
+                    if (sRet < 0)
+                    {
+                        std::cerr<<"multiCast: resend error\n";
+                        exit(1);
+                    }
 
                     int tmpS = -(*iter).first;
                     peer tmpP = (*iter).second;
