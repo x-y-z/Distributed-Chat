@@ -125,6 +125,15 @@ void UDP::setRemoteAddr(struct sockaddr_in addr)
 
 }
 
+void UDP::updateSocket(const char *host, int port)
+{
+    closesocket(_socket);
+    init = false;
+
+    setRemoteAddr(host, port);
+
+}
+
 void UDP::setRemoteAddr(const char *host, int port)
 {
     if (init == true)
