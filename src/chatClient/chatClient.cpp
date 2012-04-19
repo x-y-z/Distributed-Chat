@@ -78,10 +78,10 @@ int chatClient::processMSG(const char* msg, int mlen)
                     msgMaker::serialize(outmsg,outlen,tempMsg);
                     parser.senderInfo(newIP,newName,newPort,newID);
                     
-                    clntUDP.setRemoteAddr(newIP.c_str(),newPort);
-                    clntUDP.sendTo(outmsg.c_str(),outlen);
+                    UDP joinUDP;
+                    joinUDP.setRemoteAddr(newIP.c_str(),newPort);
+                    joinUDP.sendToNACK(outmsg.c_str(),outlen);
                     
-                    clntUDP.setRemoteAddr(s_ip.c_str(),s_port);
                     mmaker.setInfo(name,IP, port,C_ID);
                     return 1;
                 }
