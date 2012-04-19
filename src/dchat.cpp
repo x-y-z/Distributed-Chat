@@ -24,7 +24,9 @@
 int mainRunning = 1;
 int uiRunning = 0;
 int uiSuspend = 0;
+bool updateUDP =false;
 dchatType myType;
+UDP msgSender;
 #define MAX_MSG_LEN 2048
 
 pthread_mutex_t uiMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -157,7 +159,7 @@ int main(int argc, char *argv[])
         {
             int clientRV=0;
             clientRV= aClnt.msgEnqueue(recvMsg,recvMsgLen);
-            
+            cout<<"client return value "<<clientRV<<endl;
 	        if( clientRV==10){
                 myType = dServer;
                 myID = aClnt.getID();
@@ -165,8 +167,14 @@ int main(int argc, char *argv[])
                 int maxMsgId = aClnt.getMaxCnt();
 
                 peerList = aClnt.getClientList();
-
+                cout<<"About to switch from client to sequencer!"<<endl;
                 aSeq.switchFromClient(peerList, myID, maxMsgId);
+                
+                pthread_mutex_lock(&uiMutex);
+                msgSender.updateSocket(myIP.c_str(),myPort);
+                pthread_mutex_unlock(&uiMutex);
+                
+                //aSeq.printMemberList();
                 //switch to sequencer, and broadcast the " I am the leader " message
                 //(handle time out by deleting and broadcasting leave messages)
             } 
@@ -191,7 +199,7 @@ int getAPortNum()
 void * uiInteract(void *args)
 {
     threadArgs *outArgs = (threadArgs *)args;
-    UDP msgSender;
+    
     string myName = outArgs->myName;
     string myIP = outArgs->myIP;
     int myPort = outArgs->myPort;
@@ -214,7 +222,12 @@ void * uiInteract(void *args)
         string input;
         string outMsg;
         int outMsgLen;
-
+        
+//        if(updateUDP){
+//            updateUDP=false;
+//            msgSender.updateSocket(myIP.c_str(),myPort);
+//        }
+        
         // get user input
         getline(cin, input);
         // handle existing situation
@@ -245,9 +258,17 @@ void * uiInteract(void *args)
             if(myType==dClient){
                 if(outArgs->aClnt->sendBroadcastMsg(input)==10){
                     myType = dServer;
+                    myID = outArgs->aClnt->getID();
+                    vector<peer> peerList;
+                    int maxMsgId = outArgs->aClnt->getMaxCnt();
+                    
+                    peerList = outArgs->aClnt->getClientList();
+                    outArgs->aClnt->displayClients();
+                    outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
                 }
             }
             else{
+                
                 msgMaker::serialize(outMsg, outMsgLen,
                                     aMaker.makeMsg(input.c_str(), input.size())); 
                 msgSender.sendToNACK(outMsg.c_str(), outMsg.size());

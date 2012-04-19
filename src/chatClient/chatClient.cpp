@@ -18,6 +18,7 @@ chatClient::chatClient(string cname, string cIP,int cport){
     IP = cIP;
     port = cport;
     next = true;
+    electWin = true;
     C_ID = -1;
     s_port = -1;
     reSendCount = 0;
@@ -149,8 +150,8 @@ int chatClient::processMSG(const char* msg, int mlen)
                     
                     for(aIter = clientList.begin(); aIter != clientList.end(); aIter++){
                         if((*aIter).c_id==newID){
-                            clientList.erase(aIter);
                             cout<<"NOTICE "<<aIter->name<<" left the chat or crashed"<<endl;
+                            clientList.erase(aIter);
                             break;
                         }
                     }
@@ -238,17 +239,29 @@ int chatClient::processMSG(const char* msg, int mlen)
                     cerr<<"Unexpected msg election ok message @"<<name<<" !"<<endl;
                     exit(-1);
                 }
+                else{
+                    cout<<"a user with higher ID starts a new election, I am going to shut up."<<endl;
+                    electWin=false;
+                }
                 return 1;
                 break;
             case leader_broadcast:
                 //get and setup the info of the new sequencer
                 //here we just ignore the state which this client is in. Cause it's safe 
                 //to change the sequencer here.
+                status = NORMAL;
                 parser.senderInfo(newIP, newName, newPort,newID);
-                s_ip = newIP;
-                s_port = newPort;
-                s_id = newID;
-                sname = newName;
+                if(newID!=C_ID){
+                    
+                    s_ip = newIP;
+                    s_port = newPort;
+                    s_id = newID;
+                    sname = newName;
+                    clntUDP.updateSocket(s_ip.c_str(),s_port);
+                    
+                    cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
+                    cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
+                }
                 return 1;
                 break;
             default: //not used here.
@@ -299,12 +312,15 @@ int chatClient::sendBroadcastMsg(string msgContent){
         next=false;
         //if timeout, clear local message queue and do election.
         if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+            cout<<"sequencer died!"<<endl;
+            
             //localMsgQ.clear();
             for (i=0; i<localMsgQ.size(); i++) {
                 localMsgQ.pop();
             }
             next=true;
             if(doElection()>0){    
+                cout<<"I am now the new sequencer"<<endl;
                 return 10; 
             }
             else return 1;
@@ -328,13 +344,15 @@ int chatClient::addNewUser(string name, string newCIP, int newCPort, int newCID)
 
 int chatClient::removeUser(int CID){
     unsigned int i=0;
-    for (i=0; i<clientList.size(); i++) {
-        if(clientList[i].c_id==CID){
-            clientList.erase(clientList.begin()+i);
-            break;
+    vector<peer>::iterator it;
+    for (it=clientList.begin(); it!=clientList.end(); it++) {
+        if((*it).c_id==CID){
+            cout<<"remove "<<(*it);
+            clientList.erase(it);
+            return 1;
         }
     }
-    return 1;
+    return -1;
 }
 //return 1 if it's elected to be leader.
 //return -1 if not.
@@ -342,15 +360,42 @@ int chatClient::doElection(){
     myMsg tempMsg;
     string outmsg;
     int outlen;
-    tempMsg = mmaker.makeElec();
-    msgMaker::serialize(outmsg,outlen,tempMsg);
-    vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
-    //vector<peer> timeoutClients;
-    if(timeoutClients.empty()){
-        status= NORMAL;
-        return 1; 
+//    
+//        
+//    while(status==ELEC&&electWin){}
+//    if(status==ELEC&&!electWin){
+//        return -1;
+//    }
+//    else if(status!=ELEC&&electWin){
+//        return 1;
+//    }
+//    
+//    if(timeoutClients.empty()){
+//        status= NORMAL;
+//        return 1; 
+//    }
+//    else{       
+//        return -1;
+//    }
+    int i =0, maxID=0;
+    for(i=0;i<clientList.size();i++){
+        if (clientList[i].c_id>maxID) {
+            maxID = clientList[i].c_id;
+        }
     }
-    else{       
+    if (maxID==C_ID) {
+        status =NORMAL;
+        
+        return 1;
+    }
+    else{
+        //first notice all the peers that old sequencer is dead
+        //then return -1 to indicate that itself is not the sequencer.
+        tempMsg = mmaker.makeElec();
+        status = ELEC;
+        msgMaker::serialize(outmsg,outlen,tempMsg);
+        vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
+        
         return -1;
     }
 }
@@ -369,7 +414,7 @@ void chatClient::doLeave(){
 void chatClient::displayClients(){
 	int i=0;
 	bool printleader = false;
-	cout<<"Succeed, current users("<<clientList.size()<<" users):"<<endl;
+	cout<<"Succeed, current users("<<(clientList.size()+1)<<" users):"<<endl;
     cout<<sname<<" "<<s_ip<<":"<<s_port<<" (leader)"<<endl;
 	for(i=0;i<clientList.size();i++){    
         if(clientList[i].c_id==s_id){

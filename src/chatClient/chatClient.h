@@ -33,7 +33,7 @@ private:
     int port, C_ID, msgMaxCnt;
     int  s_port, reSendCount,s_id;
     int status;//0:initial, 1:waiting for Join ACK, 2:normal, 3:election
-    bool next;
+    bool next, electWin;
     myMsg msgToSend;
     msgMaker mmaker;//set up necassary info by calling the "setInfo" function
     UDP clntUDP;
