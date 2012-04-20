@@ -365,6 +365,7 @@ int chatClient::doElection(){
     myMsg tempMsg;
     string outmsg;
     int outlen;
+    status = ELEC;
 //    
 //        
 //    while(status==ELEC&&electWin){}
