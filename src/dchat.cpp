@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
         else if (myType == dClient)
         {
             int clientRV=0;
+            
             clientRV= aClnt.msgEnqueue(recvMsg,recvMsgLen);
             //cout<<"client return value "<<clientRV<<endl;
 	        if( clientRV==10){
@@ -175,11 +176,12 @@ int main(int argc, char *argv[])
                 msgSender.updateSocket(myIP.c_str(),myPort);
                 //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                 pthread_mutex_unlock(&uiMutex);
-                
-                //aSeq.printMemberList();
+                cout<<"After Election"<<endl;
+                aSeq.printMemberList();
                 //switch to sequencer, and broadcast the " I am the leader " message
                 //(handle time out by deleting and broadcasting leave messages)
-            } 
+            }
+            
         }
     }
 
@@ -254,6 +256,7 @@ void * uiInteract(void *args)
         {
             
             if(myType==dClient){
+                
                 if(outArgs->aClnt->sendBroadcastMsg(input)==10){
                     myType = dServer;
                     myID = outArgs->aClnt->getID();
@@ -261,7 +264,6 @@ void * uiInteract(void *args)
                     int maxMsgId = outArgs->aClnt->getMaxCnt();
                     
                     peerList = outArgs->aClnt->getClientList();
-                    outArgs->aClnt->displayClients();
                     outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
                     //reset msgSender
                     pthread_mutex_lock(&uiMutex);
@@ -269,9 +271,36 @@ void * uiInteract(void *args)
                     msgSender.updateSocket(myIP.c_str(),myPort);
                     //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                     pthread_mutex_unlock(&uiMutex);
-                    
+                    cout<<"After Election"<<endl;
                     outArgs->aSeq->printMemberList();
+                    
                 }
+//                msgMaker::serialize(outMsg, outMsgLen,
+//                                    aMaker.makeMsg(input.c_str(), input.size())); 
+//                cout<<"ready to send"<<endl;
+//                if(msgSender.sendToNACK(outMsg.c_str(), outMsg.size())==-2){
+//                    cout<<"sfsf"<<endl;
+//                    if(outArgs->aClnt->doElection()>0){    
+//                        //cout<<"I am now the new sequencer"<<endl;
+//                        myType = dServer;
+//                        myID = outArgs->aClnt->getID();
+//                        vector<peer> peerList;
+//                        int maxMsgId = outArgs->aClnt->getMaxCnt();
+//                        
+//                        peerList = outArgs->aClnt->getClientList();
+//                        
+//                        outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
+//                        //reset msgSender
+//                        pthread_mutex_lock(&uiMutex);
+//                        //cout<<"about to reset msgSender"<<endl;
+//                        msgSender.updateSocket(myIP.c_str(),myPort);
+//                        //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+//                        pthread_mutex_unlock(&uiMutex);
+//                        cout<<"After Election"<<endl;
+//                        outArgs->aSeq->printMemberList();
+// 
+//                    }
+//                }
             }
             else{
                 msgMaker::serialize(outMsg, outMsgLen,
@@ -279,6 +308,7 @@ void * uiInteract(void *args)
                 msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
                 //cout<<temp<<endl;
             }
+            
         }
     }
 

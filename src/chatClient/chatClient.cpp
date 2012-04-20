@@ -13,6 +13,7 @@
 using namespace std;
 
 
+
 chatClient::chatClient(string cname, string cIP,int cport){
     name = cname;
     IP = cIP;
@@ -175,6 +176,7 @@ int chatClient::processMSG(const char* msg, int mlen)
             
                 else{
                     cerr<<"Unexpected Leave Broadcast message @"<<name<<" !"<<endl;
+                    inMsgQ.push(string(msg));
                     return -1;
                 }
                 break;
@@ -249,6 +251,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get and setup the info of the new sequencer
                 //here we just ignore the state which this client is in. Cause it's safe 
                 //to change the sequencer here.
+                
                 status = NORMAL;
                 parser.senderInfo(newIP, newName, newPort,newID);
                 if(newID!=C_ID){
@@ -258,9 +261,10 @@ int chatClient::processMSG(const char* msg, int mlen)
                     s_id = newID;
                     sname = newName;
                     removeUser(s_id);
+                    
                     clntUDP.updateSocket(s_ip.c_str(),s_port);
                     
-                    //cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
+                    cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
                     //cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
                 }
                 return 1;
@@ -361,6 +365,7 @@ int chatClient::doElection(){
     myMsg tempMsg;
     string outmsg;
     int outlen;
+    status = ELEC;
 //    
 //        
 //    while(status==ELEC&&electWin){}
@@ -384,6 +389,7 @@ int chatClient::doElection(){
             maxID = clientList[i].c_id;
         }
     }
+    cout<<"maxID is :"<<maxID<<endl;
     if (maxID==C_ID) {
         status =NORMAL;
         
@@ -395,8 +401,16 @@ int chatClient::doElection(){
         tempMsg = mmaker.makeElec();
         status = ELEC;
         msgMaker::serialize(outmsg,outlen,tempMsg);
+        //cout<<"before broadcast"<<endl;
+        vector<peer>::iterator it;
         vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
-        
+        if(!timeoutClients.empty()){
+            for(it=timeoutClients.begin();it!=timeoutClients.end();it++){
+                removeUser((*it).c_id);
+                
+            }
+            return doElection();
+        }
         return -1;
     }
 }

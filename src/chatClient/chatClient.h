@@ -58,6 +58,7 @@ public:
     int getID();
     vector<peer> getClientList();   
     int getMaxCnt(){return msgMaxCnt;};
+    
 private:
     int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);
