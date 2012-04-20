@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sys/time.h>
 #include <pthread.h>
+#include <errno.h>
 
 
 UDP::UDP(int port)
@@ -241,7 +242,7 @@ int UDP::sendToNACK(const void *msg, size_t size)
         sRet = sendTo(msg, size);
         if (sRet < 0)
         {
-            std::cerr<<"sendToNACK: sending error\n";
+            std::cerr<<"sendToNACK: sending error:"<<errno<<endl;
             exit(1);
         }
 
@@ -283,7 +284,7 @@ int UDP::recvFromNACK(void *msg, size_t size,
     rRet = recvFrom(msg, size);
     if (rRet < 0)
     {
-        std::cerr<<"recvFromNACK: receive error\n";
+        std::cerr<<"recvFromNACK: receive error:"<<errno<<endl;
         exit(1);
     }
     msgMaker aMaker;
