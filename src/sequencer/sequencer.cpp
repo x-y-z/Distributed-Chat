@@ -380,6 +380,7 @@ int sequencer::switchFromClient(const vector<peer> &aList, int myID, int maxMsgI
     }
 
     return sendLeaderBCast();
+    
 }
 int sequencer::sendLeaderBCast()
 {

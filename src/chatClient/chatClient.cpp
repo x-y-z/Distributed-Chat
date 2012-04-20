@@ -257,6 +257,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                     s_port = newPort;
                     s_id = newID;
                     sname = newName;
+                    removeUser(s_id);
                     clntUDP.updateSocket(s_ip.c_str(),s_port);
                     
                     cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;

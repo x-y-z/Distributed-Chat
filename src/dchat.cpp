@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
         std::cout<<"**Waiting for a new Msg**\n";
         recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
                               myPort, myID);
-
+        cout<<"receieved a message."<<endl;
         if (myType == dServer)
         {
             seqStatus pRet = aSeq.processMSG(recvMsg, recvMsgLen);
@@ -171,7 +171,9 @@ int main(int argc, char *argv[])
                 aSeq.switchFromClient(peerList, myID, maxMsgId);
                 
                 pthread_mutex_lock(&uiMutex);
+                cout<<"about to reset msgSender"<<endl;
                 msgSender.updateSocket(myIP.c_str(),myPort);
+                cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                 pthread_mutex_unlock(&uiMutex);
                 
                 //aSeq.printMemberList();
@@ -223,10 +225,6 @@ void * uiInteract(void *args)
         string outMsg;
         int outMsgLen;
         
-//        if(updateUDP){
-//            updateUDP=false;
-//            msgSender.updateSocket(myIP.c_str(),myPort);
-//        }
         
         // get user input
         getline(cin, input);
@@ -265,13 +263,22 @@ void * uiInteract(void *args)
                     peerList = outArgs->aClnt->getClientList();
                     outArgs->aClnt->displayClients();
                     outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
+                    //reset msgSender
+                    pthread_mutex_lock(&uiMutex);
+                    cout<<"about to reset msgSender"<<endl;
+                    msgSender.updateSocket(myIP.c_str(),myPort);
+                    cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+                    pthread_mutex_unlock(&uiMutex);
+                    
+                    outArgs->aSeq->printMemberList();
                 }
             }
             else{
-                
+                int temp =0;
                 msgMaker::serialize(outMsg, outMsgLen,
                                     aMaker.makeMsg(input.c_str(), input.size())); 
-                msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+                temp= msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+                cout<<temp<<endl;
             }
         }
     }
