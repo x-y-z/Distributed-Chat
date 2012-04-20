@@ -371,6 +371,7 @@ void sequencer::printMemberList()
 int sequencer::switchFromClient(const vector<peer> &aList, int myID, int maxMsgID)
 {
     my_id = myID;
+    max_id = myID;
     msg_seq_id = maxMsgID;
     setClientList(aList);
 
