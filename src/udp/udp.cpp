@@ -413,9 +413,9 @@ vector<peer> UDP::multiCastNACK_T(const char *msg, size_t size,
         argList[i].msg = msg;
         argList[i].mSize = size;
 
-        std::cerr<<"message broadcast:\n"<<"Socket:"<<argList[i].mySock
-                 <<" for "<<clntList[i].name<<" with id:"<<clntList[i].c_id
-                 <<", with ip:"<<clntList[i].ip<<":"<<clntList[i].port<<endl;
+        //std::cerr<<"message broadcast:\n"<<"Socket:"<<argList[i].mySock
+                 //<<" for "<<clntList[i].name<<" with id:"<<clntList[i].c_id
+                 //<<", with ip:"<<clntList[i].ip<<":"<<clntList[i].port<<endl;
 
         int rc = pthread_create(&idList[i], &attr, uniCast, &(argList[i]));
         if (rc)
@@ -472,9 +472,9 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
         }
 
         sendList[newSock] = clntList[i];
-        std::cerr<<"message broadcast:\n"<<"Socket:"<<newSock
-                 <<" for "<<clntList[i].name<<" with id:"<<clntList[i].c_id
-                 <<", with ip:"<<clntList[i].ip<<":"<<clntList[i].port<<endl;
+//        std::cerr<<"message broadcast:\n"<<"Socket:"<<newSock
+//                 <<" for "<<clntList[i].name<<" with id:"<<clntList[i].c_id
+//                 <<", with ip:"<<clntList[i].ip<<":"<<clntList[i].port<<endl;
     }
 
     map<SOCKET, peer>::iterator iter;
@@ -525,8 +525,8 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                 std::cerr<<"UDP: select error\n";
                 exit(1);
             }
-            std::cerr<<"UDP:- There are "<<selectNum<<" out of "
-                     <<expectedNum<<" responses!\n";
+//            std::cerr<<"UDP:- There are "<<selectNum<<" out of "
+//                     <<expectedNum<<" responses!\n";
             for (iter = sendList.begin(); iter != sendList.end(); iter++)
             {
                 if (FD_ISSET((*iter).first, &socks))
@@ -543,8 +543,8 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                     if (aParser.isACK())
                     {
                         //this client is clear
-                        std::cerr<<"Close socket:"<<(*iter).first
-                                 <<" for ack recved\n";
+//                        std::cerr<<"Close socket:"<<(*iter).first
+//                                 <<" for ack recved\n";
                         closesocket((*iter).first);
                         FD_CLR((*iter).first, &socks);
                         sendList.erase(iter);
@@ -574,8 +574,8 @@ vector<peer> UDP::multiCastNACK(const void *msg, size_t size,
                 if ((*iter).first < 0)
                 {
                     //this client is time out
-                    std::cerr<<"Close socket:"<<(*iter).first
-                             <<" for timeout\n";
+//                    std::cerr<<"Close socket:"<<(*iter).first
+//                             <<" for timeout\n";
                     closesocket(-(*iter).first);
                     FD_CLR(-(*iter).first, &socks);
                     sendList.erase(iter);

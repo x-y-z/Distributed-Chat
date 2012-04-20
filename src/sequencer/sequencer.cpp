@@ -38,7 +38,7 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
 {
     msgParser aParser(inMsg, mlen);
     seqStatus status = seqSuccess;
-    std::cerr<<"got a message:"<<aParser.msgTypeIs()<<endl;
+    //std::cerr<<"got a message:"<<aParser.msgTypeIs()<<endl;
 
     switch (aParser.msgTypeIs())
     {
@@ -78,7 +78,7 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
                 aParser.senderInfo(ip, name, port, id);
                 //remove from client list
                 peer findRet = findAndDeletePeer(id);
-                std::cout<<"I delete:"<<findRet<<endl;
+                //std::cout<<"I delete:"<<findRet<<endl;
                 if (findRet.port == -1)
                 {
                     status = seqLeaveGhost;
@@ -272,7 +272,7 @@ int sequencer::sendLeaveBCast(const peer &someOne)
 
     if (clientList.size() == 0)
         return -1;//no clients
-    std::cout<<"I send leave bcast:"<<someOne;
+    //std::cout<<"I send leave bcast:"<<someOne;
     aMaker.setInfo(someOne.name, someOne.ip, someOne.port, someOne.c_id);
 
     string aMsg;

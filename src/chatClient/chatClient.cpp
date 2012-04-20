@@ -33,7 +33,7 @@ int chatClient::msgEnqueue(const char* msg, int len){
     int toReturn =0;
     bool skip = false;
     inMsgQ.push(tempMsg);
-    std::cerr<<"get a message\n";
+    //std::cerr<<"get a message\n";
     //process the message queue until it's empty
     //blocking outter messages;
     while (!inMsgQ.empty()) {
@@ -62,7 +62,7 @@ int chatClient::processMSG(const char* msg, int mlen)
     vector<peer>::iterator aIter;
     msgParser parser(msg, mlen);
     
-    std::cerr<<parser.msgTypeIs()<<endl;
+    //std::cerr<<parser.msgTypeIs()<<endl;
         
     if(parser.isACK()){
         //return 0;
@@ -240,7 +240,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                     exit(-1);
                 }
                 else{
-                    cout<<"a user with higher ID starts a new election, I am going to shut up."<<endl;
+                    //cout<<"a user with higher ID starts a new election, I am going to shut up."<<endl;
                     electWin=false;
                 }
                 return 1;
@@ -260,8 +260,8 @@ int chatClient::processMSG(const char* msg, int mlen)
                     removeUser(s_id);
                     clntUDP.updateSocket(s_ip.c_str(),s_port);
                     
-                    cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
-                    cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
+                    //cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
+                    //cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
                 }
                 return 1;
                 break;
@@ -313,7 +313,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
         next=false;
         //if timeout, clear local message queue and do election.
         if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-            cout<<"sequencer died!"<<endl;
+            //cout<<"sequencer died!"<<endl;
             
             //localMsgQ.clear();
             for (i=0; i<localMsgQ.size(); i++) {
@@ -321,7 +321,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
             }
             next=true;
             if(doElection()>0){    
-                cout<<"I am now the new sequencer"<<endl;
+                //cout<<"I am now the new sequencer"<<endl;
                 return 10; 
             }
             else return 1;
@@ -348,7 +348,7 @@ int chatClient::removeUser(int CID){
     vector<peer>::iterator it;
     for (it=clientList.begin(); it!=clientList.end(); it++) {
         if((*it).c_id==CID){
-            cout<<"remove "<<(*it);
+            //cout<<"remove "<<(*it);
             clientList.erase(it);
             return 1;
         }

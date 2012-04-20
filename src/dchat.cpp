@@ -145,21 +145,21 @@ int main(int argc, char *argv[])
         char recvMsg[MAX_MSG_LEN];
         int recvMsgLen;
         
-        std::cout<<"**Waiting for a new Msg**\n";
+        //std::cout<<"**Waiting for a new Msg**\n";
         recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
                               myPort, myID);
-        cout<<"receieved a message."<<endl;
+        //cout<<"receieved a message."<<endl;
         if (myType == dServer)
         {
             seqStatus pRet = aSeq.processMSG(recvMsg, recvMsgLen);
-            if (pRet != 0)
-                std::cerr<<"something wrong:"<<pRet<<endl;
+            if (pRet != 0){}
+                //std::cerr<<"something wrong:"<<pRet<<endl;
         }
         else if (myType == dClient)
         {
             int clientRV=0;
             clientRV= aClnt.msgEnqueue(recvMsg,recvMsgLen);
-            cout<<"client return value "<<clientRV<<endl;
+            //cout<<"client return value "<<clientRV<<endl;
 	        if( clientRV==10){
                 myType = dServer;
                 myID = aClnt.getID();
@@ -167,13 +167,13 @@ int main(int argc, char *argv[])
                 int maxMsgId = aClnt.getMaxCnt();
 
                 peerList = aClnt.getClientList();
-                cout<<"About to switch from client to sequencer!"<<endl;
+                //cout<<"About to switch from client to sequencer!"<<endl;
                 aSeq.switchFromClient(peerList, myID, maxMsgId);
                 
                 pthread_mutex_lock(&uiMutex);
-                cout<<"about to reset msgSender"<<endl;
+                //cout<<"about to reset msgSender"<<endl;
                 msgSender.updateSocket(myIP.c_str(),myPort);
-                cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+                //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                 pthread_mutex_unlock(&uiMutex);
                 
                 //aSeq.printMemberList();
@@ -265,20 +265,19 @@ void * uiInteract(void *args)
                     outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
                     //reset msgSender
                     pthread_mutex_lock(&uiMutex);
-                    cout<<"about to reset msgSender"<<endl;
+                    //cout<<"about to reset msgSender"<<endl;
                     msgSender.updateSocket(myIP.c_str(),myPort);
-                    cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+                    //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                     pthread_mutex_unlock(&uiMutex);
                     
                     outArgs->aSeq->printMemberList();
                 }
             }
             else{
-                int temp =0;
                 msgMaker::serialize(outMsg, outMsgLen,
                                     aMaker.makeMsg(input.c_str(), input.size())); 
-                temp= msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
-                cout<<temp<<endl;
+                msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+                //cout<<temp<<endl;
             }
         }
     }
