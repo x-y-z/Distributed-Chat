@@ -308,8 +308,6 @@ int sequencer::putMsgInQ(const string &ip, int port, int id, const string &msg)
 
 int sequencer::sendMsgBCast()
 {
-    if (clientList.size() == 0)
-        return -1;
     //remember to add msg_seq_num
     int msgGlobalNum = nextMsgCnt();
     string bMsg = _MsgQ.front();
@@ -324,6 +322,13 @@ int sequencer::sendMsgBCast()
     msgMaker::serialize(aMsg, aMsg_len, 
                         aMaker.makeMsgBCast(bMsg.c_str(), bMsg.size(),
                                             msgGlobalNum));
+
+    if (clientList.size() == 0)
+    {
+        std::cout<<bMsg<<endl;
+        std::cout.flush();
+        return -1;
+    }
 
     vector<peer> timeoutList = _udp.multiCastNACK_T(aMsg.c_str(), aMsg.size(),
                                     clientList);
