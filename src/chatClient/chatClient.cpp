@@ -317,7 +317,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
         next=false;
         //if timeout, clear local message queue and do election.
         if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-            cout<<"sequencer died!"<<endl;
+            //cout<<"sequencer died!"<<endl;
             
             //localMsgQ.clear();
             for (i=0; i<localMsgQ.size(); i++) {
@@ -400,7 +400,7 @@ int chatClient::doElection(){
         tempMsg = mmaker.makeElec();
         status = ELEC;
         msgMaker::serialize(outmsg,outlen,tempMsg);
-        cout<<"before broadcast"<<endl;
+        //cout<<"before broadcast"<<endl;
         vector<peer>::iterator it;
         vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
         if(!timeoutClients.empty()){
