@@ -222,17 +222,19 @@ int chatClient::processMSG(const char* msg, int mlen)
             case election_req:{
                 //do BULLY
                 //vector<peer> timeoutList;
-                status=ELEC;
-                parser.senderInfo(newIP, newName, newPort,newID);
-                
-                if(C_ID>newID){
-                    if(doElection()>0){
-                        
-                        return 10;
+                if(status==NORMAL){
+                    status=ELEC;
+                    parser.senderInfo(newIP, newName, newPort,newID);
+                    
+                    if(C_ID>newID){
+                        if(doElection()>0){
+                            
+                            return 10;
+                        }
+                        else return -10;
                     }
-                    else return -10;
                 }
-            
+                else return -1;
                 break;
             }
             case election_ok:
@@ -316,7 +318,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
         msgMaker::serialize(outmsg, outlen, message);
         next=false;
         //if timeout, clear local message queue and do election.
-        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2&&status!=ELEC){
             //cout<<"sequencer died!"<<endl;
             
             //localMsgQ.clear();

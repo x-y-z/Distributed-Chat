@@ -271,7 +271,7 @@ void * uiInteract(void *args)
                     msgSender.updateSocket(myIP.c_str(),myPort);
                     //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                     pthread_mutex_unlock(&uiMutex);
-                    cout<<"After Election"<<endl;
+                    cout<<"After Election in UI"<<endl;
                     outArgs->aSeq->printMemberList();
                     
                 }
