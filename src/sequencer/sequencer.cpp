@@ -150,6 +150,11 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
             break;*/
         case election_req:
             {
+                //string ip, name;
+                //int port, id;
+                //aParser.senderInfo(ip, name, port, id);
+
+                //sendLeader(ip, port, id);
                 std::cerr<<"Unexpected election, ignored!\n";
                 status = seqUnexpectedMsg;
             }
@@ -419,6 +424,29 @@ int sequencer::sendLeaderBCast()
 
     return -2;
 
+
+}
+int sequencer::sendLeader(const string &ip, int port, int id)
+{
+    int waitRes = 0;
+    msgMaker aMaker;
+    aMaker.setInfo(my_name, my_ip, my_port, my_id);
+
+    string aMsg;
+    int aMsg_len;
+    msgMaker::serialize(aMsg, aMsg_len, 
+                        aMaker.makeLeader(my_name));
+
+    UDP joinACKUDP;
+    joinACKUDP.setRemoteAddr(ip.c_str(), port);
+    waitRes = joinACKUDP.sendToNACK(aMsg.c_str(), aMsg.size());
+    
+    if (waitRes == -2)//lost remote
+    {
+        findAndDeletePeer(id);
+        return -1;
+    }
+    return 0;
 
 }
 /*int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
