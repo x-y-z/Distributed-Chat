@@ -182,6 +182,13 @@ int main(int argc, char *argv[])
                 //switch to sequencer, and broadcast the " I am the leader " message
                 //(handle time out by deleting and broadcasting leave messages)
             }
+            else if(clientRV==9){
+                pthread_mutex_lock(&uiMutex);
+                //cout<<"about to reset msgSender"<<endl;
+                msgSender.updateSocket((aClnt.getSIP()).c_str(),aClnt.getSPort());
+                //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+                pthread_mutex_unlock(&uiMutex);
+            }
             
         }
     }

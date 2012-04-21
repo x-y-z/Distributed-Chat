@@ -20,6 +20,8 @@
 #define WAIT_ACK 1
 #define NORMAL 2
 #define ELEC 3 
+#define ELEC_CLIENT 4
+#define ELEC_LEADER 5
 
 using namespace std;
 
@@ -59,7 +61,8 @@ public:
     int getID();
     vector<peer> getClientList();   
     int getMaxCnt(){return msgMaxCnt;};
-    
+    string getSIP(){return s_ip;};
+    int getSPort(){return s_port;};
 private:
     int addNewUser(string name, string newCIP, int newCPort, int newCID);
     int removeUser(int CID);

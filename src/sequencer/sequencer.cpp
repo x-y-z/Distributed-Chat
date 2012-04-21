@@ -407,6 +407,7 @@ int sequencer::sendLeaderBCast()
         return 0;
     else
     {
+        cout<<timeoutList.size()<<"users timeout"<<endl;
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
             peer aTimeOut = findAndDeletePeer((*iter).c_id);
