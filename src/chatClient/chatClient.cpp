@@ -423,10 +423,9 @@ int chatClient::doElection(){
     string outmsg;
     int outlen;
     int i =0, maxID=0;
-    vector<peer> tempList;
     peer nextLeader;
     vector<peer>::iterator tempit;
-    if(status==NORMAL){
+    if(status==NORMAL||status==ELEC_CLIENT){
         status = ELEC;
         cout<<"before leader search, clientlist has: "<<clientList.size()<<" users"<<endl;
         for(tempit=clientList.begin();tempit!=clientList.end();tempit++){
@@ -435,11 +434,9 @@ int chatClient::doElection(){
                 nextLeader = (*tempit);
             }
         }
-        tempList.push_back(nextLeader);
         cout<<"maxID is :"<<maxID<<endl;
         if (maxID==C_ID) {
-            status =ELEC_LEADER;
-            
+            status =ELEC_LEADER;            
             return 1;
         }
         else{
@@ -448,21 +445,17 @@ int chatClient::doElection(){
             tempMsg = mmaker.makeElec();
             status = ELEC_CLIENT;
             msgMaker::serialize(outmsg,outlen,tempMsg);
-            cout<<"before elec broadcast"<<endl;
-            vector<peer>::iterator it;
-            //vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
+            cout<<"before elec unicast"<<endl;
+            cout<<"next leader will be:"<<nextLeader.ip<<":"<<nextLeader.port<<endl;
+            pthread_mutex_lock(&udpMutex);
+            clntUDP.updateSocket(nextLeader.ip,nextLeader.port);
+            pthread_mutex_unlock(&udpMutex);
+            
             if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+                cout<<"the next sequencer also died, do election again "<<endl;
+                removeUser(maxID);
                 return doElection();
             }
-//            if(!timeoutClients.empty()){
-//                cout<<"time out clients during elect"<<endl;
-//                for(it=timeoutClients.begin();it!=timeoutClients.end();it++){
-//                    cout<<(*it)<<endl;
-//                    removeUser((*it).c_id);
-//                    
-//                }
-//                return doElection();
-//            }
             return -1;
         }
     }
