@@ -9,7 +9,7 @@
 //       Revision:  none
 //       Compiler:  g++
 // 
-//         Author:  Zi Yan (yz), zi.yan@gmx.com
+//         Author:  Zi Yan (yz), zi.yan@gmx.com, Xin Dong
 //        Company:  
 // 
 // ===================================================================
@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
     UDP listener(myPort);
 
 
+    //ui information
     tArgs.seqIP = seqIP;
     tArgs.seqPort = seqPort;
     tArgs.myIP = myIP;
@@ -139,10 +140,10 @@ int main(int argc, char *argv[])
         tArgs.seqIP = seqIP;
         tArgs.seqPort = seqPort;
         tArgs.myID = myID = aClnt.getID();
-        //aClnt.displayClients();
     }
 
     
+    //main recv msg loop
     mArgs.listener = &listener;
     mArgs.globalQ = &globalMsgQ;
     mainRet = pthread_create(&mainThread, NULL, mainRecv, (void*)&mArgs);
@@ -156,8 +157,6 @@ int main(int argc, char *argv[])
     //message handling loop
     while (mainRunning)
     {
-        //char recvMsg[MAX_MSG_LEN];
-        //int recvMsgLen;
         string recvMsg;
 
         pthread_mutex_lock(&qMutex);
@@ -170,23 +169,16 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&qMutex);
         pthread_cond_signal(&qNotFull);
         
-        //std::cout<<"**Waiting for a new Msg**\n";
-        //recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
-        //                      myPort, myID);
-        //cout<<"receieved a message."<<endl;
         if (myType == dServer)
         {
             seqStatus pRet = aSeq.processMSG(recvMsg.c_str(), 
                                              recvMsg.size());
-            if (pRet != 0){}
-                //std::cerr<<"something wrong:"<<pRet<<endl;
         }
         else if (myType == dClient)
         {
             int clientRV=0;
             
             clientRV= aClnt.msgEnqueue(recvMsg.c_str(), recvMsg.size());
-            //cout<<"client return value "<<clientRV<<endl;
             if( clientRV==10){
                 myType = dServer;
                 myID = aClnt.getID();
@@ -204,14 +196,10 @@ int main(int argc, char *argv[])
                 pthread_mutex_unlock(&uiMutex);
                 cout<<"After Election"<<endl;
                 aSeq.printMemberList();
-                //switch to sequencer, and broadcast the " I am the leader " message
-                //(handle time out by deleting and broadcasting leave messages)
             }
             else if(clientRV==9){
                 pthread_mutex_lock(&uiMutex);
-                //cout<<"about to reset msgSender"<<endl;
                 msgSender.updateSocket((aClnt.getSIP()).c_str(),aClnt.getSPort());
-                //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                 pthread_mutex_unlock(&uiMutex);
             }
             
@@ -321,43 +309,21 @@ void * uiInteract(void *args)
         }
 
         input = myName + ":: " + input;
-        //cout<<myName<<": "<<input<<endl;
         // send message to sequencer
         // no msg sending while election or special situation
         if (!uiSuspend)
         {
             
             if(myType==dClient){
-                
-//                if(outArgs->aClnt->sendBroadcastMsg(input)==10){
-//                    myType = dServer;
-//                    myID = outArgs->aClnt->getID();
-//                    vector<peer> peerList;
-//                    int maxMsgId = outArgs->aClnt->getMaxCnt();
-//                    
-//                    peerList = outArgs->aClnt->getClientList();
-//                    outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
-//                    //reset msgSender
-//                    pthread_mutex_lock(&uiMutex);
-//                    //cout<<"about to reset msgSender"<<endl;
-//                    msgSender.updateSocket(myIP.c_str(),myPort);
-//                    //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
-//                    pthread_mutex_unlock(&uiMutex);
-//                    cout<<"After Election in UI"<<endl;
-//                    outArgs->aSeq->printMemberList();
-//                    
-//                }
                 msgMaker::serialize(outMsg, outMsgLen,
-                                    aMaker.makeMsg(input.c_str(), input.size())); 
-                cout<<"ready to send"<<endl;
+                aMaker.makeMsg(input.c_str(), input.size())); 
                 pthread_mutex_lock(&uiMutex);
-                int tempRV = msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+                int tempRV = msgSender.sendToNACK(outMsg.c_str(), 
+                                        outMsg.size());
                 pthread_mutex_unlock(&uiMutex);
                 if(tempRV==-2){
-                    
-                    cout<<"sfsf"<<endl;
-                    aMaker.setInfo(myName, myIP, myPort, outArgs->aClnt->getID());
-                    //aMaker.setInfo(myName, myIP, myPort, -1);
+                    aMaker.setInfo(myName, myIP, myPort, 
+                                   outArgs->aClnt->getID());
                     myMsg tempMsg = aMaker.makeElec();
                     string tempoutmsg;
                     int templen =0;
@@ -366,15 +332,14 @@ void * uiInteract(void *args)
                     UDP tmpSender;
                     tmpSender.setRemoteAddr(myIP.c_str(), myPort);
                     tmpSender.sendToNACK(tempoutmsg.c_str(), templen);
-
                 }
                 
             }
             else{
                 msgMaker::serialize(outMsg, outMsgLen,
-                                    aMaker.makeMsg(input.c_str(), input.size())); 
+                                    aMaker.makeMsg(input.c_str(), 
+                                    input.size())); 
                 msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
-                //cout<<temp<<endl;
             }
             
         }
