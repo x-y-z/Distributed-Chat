@@ -55,7 +55,7 @@ public:
     void doLeave();
     void displayClients();
     int dojoin(string s_ip, int s_port);
-    int dojoin(string rs_ip, int rs_port, UDP &listener);
+    int dojoin(string &rs_ip, int &rs_port, UDP &listener);
     int getID();
     vector<peer> getClientList();   
     int getMaxCnt(){return msgMaxCnt;};

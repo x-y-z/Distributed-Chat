@@ -304,10 +304,10 @@ int chatClient::dojoin(string rs_ip, int rs_port){
     return 1;
 }
 
-int chatClient::dojoin(string rs_ip, int rs_port, UDP &listener){
+int chatClient::dojoin(string &rs_ip, int &rs_port, UDP &listener){
     string outmsg;
-    int outlen, saddr_len, recvlen, MAX_MSG_LEN=255;
-    char recvMsg[255];
+    int outlen, saddr_len, recvlen, MAX_MSG_LEN=2048;
+    char recvMsg[2048];
     const string myName,myIP;
     int myPort,myID;
     s_ip = rs_ip;
@@ -332,7 +332,8 @@ int chatClient::dojoin(string rs_ip, int rs_port, UDP &listener){
         msgParser tempParser(reMsg.c_str(),recvlen);
         processMSG(reMsg.c_str(),recvlen); 
         if(tempParser.msgTypeIs()==join_ack){
-            
+            rs_ip = s_ip;
+            rs_port = s_port;
             break;
         }
         

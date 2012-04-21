@@ -125,6 +125,7 @@ int main(int argc, char *argv[])
     {
         
         aClnt.dojoin(seqIP,seqPort,listener);
+        cout<<"after join, leader is :"<<seqIP<<":"<<seqPort<<endl;
         tArgs.seqIP = seqIP;
         tArgs.seqPort = seqPort;
         tArgs.myID = myID = aClnt.getID();
@@ -211,15 +212,16 @@ void * uiInteract(void *args)
     pthread_t mainPID = outArgs->mainID;
     msgMaker aMaker;
 
-    aMaker.setInfo(myName, myIP, myPort, myID);
-    msgSender.setRemoteAddr(outArgs->seqIP.c_str(), outArgs->seqPort);
+    
 
     //wait for main loop signal
     pthread_mutex_lock(&uiMutex);
     while (!uiRunning)
-        pthread_cond_wait(&uiCond, &uiMutex);
+        pthread_cond_wait(&uiCond, &uiMutex);    
     pthread_mutex_unlock(&uiMutex);
-
+    
+    aMaker.setInfo(myName, myIP, myPort, myID);
+    msgSender.setRemoteAddr(outArgs->seqIP.c_str(), outArgs->seqPort);
     //running ui
     while(uiRunning)
     {
