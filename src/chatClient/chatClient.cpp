@@ -79,6 +79,7 @@ int chatClient::processMSG(const char* msg, int mlen)
         switch (parser.msgTypeIs()) {
             case join:
                 if(status!=ELEC){
+                    status=NORMAL;
                     //setup and send a Navi message
                     mmaker.setInfo(sname,s_ip, s_port,s_id);
                     tempMsg = mmaker.makeNavi();
@@ -126,7 +127,9 @@ int chatClient::processMSG(const char* msg, int mlen)
                 
             case join_broadcast:
                 //get the ip ,port name and client ID of the new user and store them locally.
-                if(status==NORMAL){
+                
+                if(status!=ELEC){
+                    status=NORMAL;
                     parser.senderInfo(newIP, newName, newPort, newID);
                     if(newID==C_ID){
                         return 1;
@@ -146,14 +149,16 @@ int chatClient::processMSG(const char* msg, int mlen)
                 else{
                     //in wrong state, push the message into message queue and handle later on
                     cerr<<"Unexpected Join Broadcast message @"<<name<<" !"<<endl;
-                    inMsgQ.push(string(msg));
+                    string temps(msg,mlen);
+                    inMsgQ.push(temps);
                     return -1;
                 }
                 break;
             case leave_broadcast:{
                 //remove the specific user from the peer list
                 vector<peer> timeoutList;
-                if(status==NORMAL){
+                if(status!=ELEC){
+                    status=NORMAL;
                     parser.senderInfo(newIP, newName, newPort,newID);
                     
                     for(aIter = clientList.begin(); aIter != clientList.end(); aIter++){
@@ -183,7 +188,8 @@ int chatClient::processMSG(const char* msg, int mlen)
             
                 else{
                     cerr<<"Unexpected Leave Broadcast message @"<<name<<" !"<<endl;
-                    inMsgQ.push(string(msg));
+                    string temps(msg,mlen);
+                    inMsgQ.push(temps);
                     return -1;
                 }
                 break;
@@ -191,7 +197,8 @@ int chatClient::processMSG(const char* msg, int mlen)
             case msg_broadcast:
                 
                 //show the message to the standard output
-                if(status==NORMAL){
+                if(status!=ELEC){
+                    status =NORMAL;
                     if(parser.getMsg(seqNum,textmsg)<0){
                         cerr<<"failed to get the message content! @"<<name<<endl;
                         exit(-1);
@@ -222,7 +229,8 @@ int chatClient::processMSG(const char* msg, int mlen)
                 }
                 else{
                     cerr<<"Unexpected msg Broadcast message @"<<name<<" !"<<endl;
-                    inMsgQ.push(string(msg));
+                    string temps(msg,mlen);
+                    inMsgQ.push(temps);
                     return -1;
                 }
                 break;
@@ -452,15 +460,14 @@ int chatClient::doElection(){
             pthread_mutex_lock(&udpMutex);
             clntUDP.updateSocket(nextLeader.ip,nextLeader.port);
             pthread_mutex_unlock(&udpMutex);
-            if(status==ELEC_CLIENT){
-                if(status==ELEC_CLIENT&&(clntUDP.sendToNACK(outmsg.c_str(),outlen))==-2){
-                    cout<<"the next sequencer also died, do election again "<<endl;
-                    removeUser(maxID);
-                    return doElection();
-                }
+
+            if((clntUDP.sendToNACK(outmsg.c_str(),outlen))==-2){
+                cout<<"the next sequencer also died, do election again "<<endl;
+                removeUser(maxID);
+                return doElection();
             }
-            return -1;
         }
+        return -1;
     }
     return -1;
 }
