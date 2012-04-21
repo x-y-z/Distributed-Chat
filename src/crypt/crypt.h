@@ -26,6 +26,22 @@ private:
 public:
     msgCrypt();
     ~msgCrypt();
+public:
+    int public_encrypt(const char *from, char *to, int msgLen);
+    int private_decrypt(const char *from, char *to, int msgLen);
+
+    int private_encrypt(const char *from, char *to, int msgLen);
+    int public_decrypt(const char *from, char *to, int msgLen);
+
+public:
+    static int public_encrypt(RSA *rsa, const char *from, char *to, int msgLen);
+    static int private_decrypt(RSA *rsa, const char *from, char *to, 
+                              int msgLen);
+
+    static int private_encrypt(RSA *rsa, const char *from, char *to, 
+                               int msgLen);
+    static int public_decrypt(RSA *rsa, const char *from, char *to, 
+                               int msgLen);
 };
 
 #endif
