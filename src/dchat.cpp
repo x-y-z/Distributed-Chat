@@ -317,8 +317,7 @@ void * uiInteract(void *args)
             else{
                 outArgs->aClnt->doLeave();
             }
-            pthread_cancel(mainPID);
-            continue;
+            exit(0);
         }
 
         input = myName + ":: " + input;
