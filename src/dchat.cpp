@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     else // for client
     {
         
-        aClnt.dojoin(seqIP,seqPort);
+        aClnt.dojoin(seqIP,seqPort,listener);
         tArgs.seqIP = seqIP;
         tArgs.seqPort = seqPort;
         tArgs.myID = myID = aClnt.getID();
@@ -257,50 +257,42 @@ void * uiInteract(void *args)
             
             if(myType==dClient){
                 
-                if(outArgs->aClnt->sendBroadcastMsg(input)==10){
-                    myType = dServer;
-                    myID = outArgs->aClnt->getID();
-                    vector<peer> peerList;
-                    int maxMsgId = outArgs->aClnt->getMaxCnt();
-                    
-                    peerList = outArgs->aClnt->getClientList();
-                    outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
-                    //reset msgSender
-                    pthread_mutex_lock(&uiMutex);
-                    //cout<<"about to reset msgSender"<<endl;
-                    msgSender.updateSocket(myIP.c_str(),myPort);
-                    //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
-                    pthread_mutex_unlock(&uiMutex);
-                    cout<<"After Election in UI"<<endl;
-                    outArgs->aSeq->printMemberList();
-                    
-                }
-//                msgMaker::serialize(outMsg, outMsgLen,
-//                                    aMaker.makeMsg(input.c_str(), input.size())); 
-//                cout<<"ready to send"<<endl;
-//                if(msgSender.sendToNACK(outMsg.c_str(), outMsg.size())==-2){
-//                    cout<<"sfsf"<<endl;
-//                    if(outArgs->aClnt->doElection()>0){    
-//                        //cout<<"I am now the new sequencer"<<endl;
-//                        myType = dServer;
-//                        myID = outArgs->aClnt->getID();
-//                        vector<peer> peerList;
-//                        int maxMsgId = outArgs->aClnt->getMaxCnt();
-//                        
-//                        peerList = outArgs->aClnt->getClientList();
-//                        
-//                        outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
-//                        //reset msgSender
-//                        pthread_mutex_lock(&uiMutex);
-//                        //cout<<"about to reset msgSender"<<endl;
-//                        msgSender.updateSocket(myIP.c_str(),myPort);
-//                        //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
-//                        pthread_mutex_unlock(&uiMutex);
-//                        cout<<"After Election"<<endl;
-//                        outArgs->aSeq->printMemberList();
-// 
-//                    }
+//                if(outArgs->aClnt->sendBroadcastMsg(input)==10){
+//                    myType = dServer;
+//                    myID = outArgs->aClnt->getID();
+//                    vector<peer> peerList;
+//                    int maxMsgId = outArgs->aClnt->getMaxCnt();
+//                    
+//                    peerList = outArgs->aClnt->getClientList();
+//                    outArgs->aSeq->switchFromClient(peerList,myID,maxMsgId);
+//                    //reset msgSender
+//                    pthread_mutex_lock(&uiMutex);
+//                    //cout<<"about to reset msgSender"<<endl;
+//                    msgSender.updateSocket(myIP.c_str(),myPort);
+//                    //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+//                    pthread_mutex_unlock(&uiMutex);
+//                    cout<<"After Election in UI"<<endl;
+//                    outArgs->aSeq->printMemberList();
+//                    
 //                }
+                msgMaker::serialize(outMsg, outMsgLen,
+                                    aMaker.makeMsg(input.c_str(), input.size())); 
+                cout<<"ready to send"<<endl;
+                if(msgSender.sendToNACK(outMsg.c_str(), outMsg.size())==-2){
+                    cout<<"sfsf"<<endl;
+                    aMaker.setInfo(myName, myIP, myPort, outArgs->aClnt->getID());
+                    //aMaker.setInfo(myName, myIP, myPort, -1);
+                    myMsg tempMsg = aMaker.makeElec();
+                    string tempoutmsg;
+                    int templen =0;
+                    msgMaker::serialize(tempoutmsg,templen,tempMsg);
+                    pthread_mutex_lock(&uiMutex);
+                    msgSender.updateSocket(myIP.c_str(),myPort);
+                    pthread_mutex_unlock(&uiMutex);
+                    msgSender.sendToNACK(tempoutmsg.c_str(),templen);
+                    
+
+                }
             }
             else{
                 msgMaker::serialize(outMsg, outMsgLen,

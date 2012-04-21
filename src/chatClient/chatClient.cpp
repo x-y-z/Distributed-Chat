@@ -228,7 +228,7 @@ int chatClient::processMSG(const char* msg, int mlen)
                 if(status==NORMAL){
                     parser.senderInfo(newIP, newName, newPort,newID);
                     
-                    if(C_ID>newID){
+                    if(C_ID>=newID){
                         if(doElection()>0){
                             
                             return 10;
@@ -291,11 +291,54 @@ int chatClient::dojoin(string rs_ip, int rs_port){
     //args: sequencer's ip, port, myIP, myPort,myName;
     myMsg message = mmaker.makeJoin(name);
     msgMaker::serialize(outmsg, outlen, message);    
-        
+    
+    
+    
+    
     if(joinUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
         cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
         exit(-1);
     }
+    
+    
+    return 1;
+}
+
+int chatClient::dojoin(string rs_ip, int rs_port, UDP &listener){
+    string outmsg;
+    int outlen, saddr_len, recvlen, MAX_MSG_LEN=255;
+    char recvMsg[255];
+    const string myName,myIP;
+    int myPort,myID;
+    s_ip = rs_ip;
+    s_port = rs_port;
+    
+    //setupt the UDP socket
+    UDP joinUDP;
+    joinUDP.setRemoteAddr(s_ip.c_str(),s_port);
+    
+    //args: sequencer's ip, port, myIP, myPort,myName;
+    myMsg message = mmaker.makeJoin(name);
+    msgMaker::serialize(outmsg, outlen, message);    
+    if(joinUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
+        cerr<<"Error! Not able to join to the group... App is about to exit..."<<endl;
+        exit(-1);
+    }
+   
+    while(1){
+        recvlen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
+                                        myPort, myID);
+        string reMsg(recvMsg,recvlen);
+        msgParser tempParser(reMsg.c_str(),recvlen);
+        processMSG(reMsg.c_str(),recvlen); 
+        if(tempParser.msgTypeIs()==join_ack){
+            
+            break;
+        }
+        
+    }
+    
+    
     
     
     return 1;
