@@ -287,7 +287,11 @@ void * uiInteract(void *args)
                 msgMaker::serialize(outMsg, outMsgLen,
                                     aMaker.makeMsg(input.c_str(), input.size())); 
                 cout<<"ready to send"<<endl;
-                if(msgSender.sendToNACK(outMsg.c_str(), outMsg.size())==-2){
+                pthread_mutex_lock(&uiMutex);
+                int tempRV = msgSender.sendToNACK(outMsg.c_str(), outMsg.size());
+                pthread_mutex_unlock(&uiMutex);
+                if(tempRV==-2){
+                    
                     cout<<"sfsf"<<endl;
                     aMaker.setInfo(myName, myIP, myPort, outArgs->aClnt->getID());
                     //aMaker.setInfo(myName, myIP, myPort, -1);
@@ -301,6 +305,7 @@ void * uiInteract(void *args)
                     tmpSender.sendToNACK(tempoutmsg.c_str(), templen);
 
                 }
+                
             }
             else{
                 msgMaker::serialize(outMsg, outMsgLen,

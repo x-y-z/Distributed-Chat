@@ -259,7 +259,8 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get and setup the info of the new sequencer
                 //here we just ignore the state which this client is in. Cause it's safe 
                 //to change the sequencer here.
-                if(status==ELEC_CLIENT){
+                cout<<"get leader_b"<<endl;
+                if(status==ELEC_CLIENT||status==NORMAL){
                     status = NORMAL;
                     parser.senderInfo(newIP, newName, newPort,newID);
                     if(newID!=C_ID&&newID!=s_id){
@@ -349,7 +350,7 @@ int chatClient::dojoin(string &rs_ip, int &rs_port, UDP &listener){
     
     return 1;
 }
-
+/*
 //return 1 if normal
 //return 10 if sequencer chrashes and change to sequencer.
 int chatClient::sendBroadcastMsg(string msgContent){
@@ -392,6 +393,7 @@ int chatClient::sendBroadcastMsg(string msgContent){
     
     return 1;
 }
+*/
 
 int chatClient::addNewUser(string name, string newCIP, int newCPort, int newCID){
     peer p;
@@ -450,11 +452,12 @@ int chatClient::doElection(){
             pthread_mutex_lock(&udpMutex);
             clntUDP.updateSocket(nextLeader.ip,nextLeader.port);
             pthread_mutex_unlock(&udpMutex);
-            
-            if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2){
-                cout<<"the next sequencer also died, do election again "<<endl;
-                removeUser(maxID);
-                return doElection();
+            if(status==ELEC_CLIENT){
+                if(status==ELEC_CLIENT&&(clntUDP.sendToNACK(outmsg.c_str(),outlen))==-2){
+                    cout<<"the next sequencer also died, do election again "<<endl;
+                    removeUser(maxID);
+                    return doElection();
+                }
             }
             return -1;
         }
