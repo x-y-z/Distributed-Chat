@@ -122,6 +122,7 @@ private:
     //for switch
     int setClientList(const vector<peer> &aList) {clientList = aList;};
     int sendLeaderBCast();
+    int sendLeader(const string &ip, int port, int id);
     //int waitForACK(const string &aMsg, int id, UDP &l_udp);
     
 };
