@@ -53,7 +53,6 @@ bool msgParser::isACK()
     }
 
     //never reach here
-    //assert(0);
     return false;
 }
 
@@ -212,7 +211,6 @@ int msgParser::msgContent(char *msgOut, int &msgLen)
         msgLen = -1;
         return -1;
     }
-  
 
     //should not be here
     return 1;

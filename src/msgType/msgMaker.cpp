@@ -117,8 +117,6 @@ myMsg msgMaker::makeJoinACK(int msgMaxCnt, int c_id,
     peer *pList = (peer *)(tmp.msgContent + sizeof(int)*2);
     for (int i = 0; i < peerlist.size(); ++i)
     {
-        //peer aP = peerlist[i];
-        //memcpy(pList + i, (char *)&aP, sizeof(peer));
         pList[i] = peerlist[i];
     }
 
@@ -307,18 +305,3 @@ myMsg msgMaker::makeLeader(const string &name)
 
     return tmp;
 }
-
-/* static void msgMaker::serlize(string &outMsg, int &outLen, const myMsg &inMsg)
-{
-    char *tmpMsg;
-    outLen = sizeof(myMsg) - sizeof(char *) + inMsg.msgLen;
-
-    tmpMsg = new char[outLen];
-
-    memcpy(tmpMsg, (char*)&inMsg, sizeof(myMsg) - sizeof(char *));
-
-    memcpy(tmpMsg + sizeof(myMsg) - sizeof(char*), inMsg.msgContent, 
-            inMsg.msgLen);
-    
-    outMsg.assign(tmpMsg, outLen);
-}*/

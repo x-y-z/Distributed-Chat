@@ -4,7 +4,7 @@
 //  This is the structure for the message used in the distributed chat program.
 //
 //  Created by Dong Xin on 12-4-8.
-//  Copyright (c) 2012年  All rights reserved.
+//  Copyright (c) 2012  All rights reserved.
 //
 
 #ifndef __MYMSG_H__
@@ -102,7 +102,6 @@ private:
     bool init;
 public:
     msgParser(){init = false;};
-//    msgParser(myMsg aMsg){ _content = aMsg; init = true;};
     msgParser(const char *msg, int len);
     ~msgParser(){};
 public:

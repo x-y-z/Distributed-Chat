@@ -24,21 +24,12 @@ sequencer::sequencer(const char* name, const char*ip, int port)
     my_ip.assign(ip);
     my_port = port;
     my_id = max_id;
-    //max_id++;
-
-    /*peer self;
-    strncpy(self.name, my_name.c_str(), my_name.size());
-    strncpy(self.ip, my_ip.c_str(), my_ip.size());
-    self.port = my_port; 
-    self.c_id = my_id;
-    clientList.push_back(self);*/
 }
 
 seqStatus sequencer::processMSG(const char *inMsg, int mlen)
 {
     msgParser aParser(inMsg, mlen);
     seqStatus status = seqSuccess;
-    //std::cerr<<"got a message:"<<aParser.msgTypeIs()<<endl;
 
     switch (aParser.msgTypeIs())
     {
@@ -78,7 +69,6 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
                 aParser.senderInfo(ip, name, port, id);
                 //remove from client list
                 peer findRet = findAndDeletePeer(id);
-                //std::cout<<"I delete:"<<findRet<<endl;
                 if (findRet.port == -1)
                 {
                     status = seqLeaveGhost;
@@ -134,22 +124,9 @@ seqStatus sequencer::processMSG(const char *inMsg, int mlen)
                 }
             }
             break;
-         /*case msg_broadcast:
-            {
-                string ip;
-                int port, id;
-                aParser.senderInfo(ip, port, id);
-
-                string recvMsg;
-                aParser.getMsg(recvMsg);
-
-                std::cout<<recvMsg;
-
-                status = 0;
-            }
-            break;*/
         case election_req:
             {
+                //for furture use
                 //string ip, name;
                 //int port, id;
                 //aParser.senderInfo(ip, name, port, id);
@@ -339,20 +316,16 @@ int sequencer::sendMsgBCast()
                                     clientList);
     if (timeoutList.size() == 0)
     {
-        //std::cerr<<"msgBroadcast: all recved\n";
         status = 0;
     }
     else
     {
-        //std::cerr<<"msgBroadcast: some lost:";
         vector<peer>::iterator iter;
         for (iter = timeoutList.begin(); iter != timeoutList.end(); iter++)
         {
-            //std::cerr<<(*iter).name<<", ";
             peer aTimeOut = findAndDeletePeer((*iter).c_id);
             sendLeaveBCast(aTimeOut);
         }
-        //std::cerr<<endl;
         status = timeoutList.size();
     }
 
@@ -449,46 +422,3 @@ int sequencer::sendLeader(const string &ip, int port, int id)
     return 0;
 
 }
-/*int sequencer::waitForACK(const string &aMsg, int id, UDP &l_udp)
-{
-        char gMsg[1024];
-        int msgLen;
-        int finished = -1;
-
-        while (finished < 0)
-        {
-            msgLen = l_udp.recvFrom(gMsg, 1024);
-            if (msgLen > 0)
-            {
-                msgParser aParser(gMsg, msgLen);
-                if (!aParser.isACK())
-                {
-                    //string tmp(gMsg, msgLen);
-                    //_MsgQ.push_back(tmp);
-                    std::cerr<<"wait for ack, but get unexpected msg\n";
-                    exit(1);
-                    finished = 3;
-                }
-                else
-                {
-                    finished = 1;//ACK recved
-                }
-            }
-            else //if (msgLen < 0)
-            {
-                //time out
-                if (finished == -1)
-                {
-                    l_udp.sendTo(aMsg.c_str(), aMsg.size());
-                    finished++;
-                }
-                else
-                {
-                    //lose remote
-                    finished = 2;//remote lost
-                }
-            }
-        }
-
-    return finished;
-}*/

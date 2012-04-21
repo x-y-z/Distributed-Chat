@@ -116,16 +116,6 @@ string UDP::getMyIP()
     return ret;
 }
 
-void UDP::setListenPort(int port)
-{
-
-}
-
-void UDP::setRemoteAddr(struct sockaddr_in addr)
-{
-
-}
-
 void UDP::updateSocket(const char *host, int port)
 {
     cout<<"update, close first"<<endl;
