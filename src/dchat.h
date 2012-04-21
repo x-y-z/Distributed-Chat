@@ -43,8 +43,18 @@ typedef struct threadArgs{
     chatClient *aClnt;
 } threadArgs;
 
+typedef struct mainArgs{
+    UDP *listener;
+    deque<string> *globalQ;
+    string myIP;
+    int myPort;
+    int myID;
+    string myName;
+} mainArgs;
+
 int getAPortNum();
 
 void * uiInteract(void *args);
+void * mainRecv(void *args);
 
 #endif

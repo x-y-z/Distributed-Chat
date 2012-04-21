@@ -24,13 +24,19 @@
 int mainRunning = 1;
 int uiRunning = 0;
 int uiSuspend = 0;
+int deQueue = 0;
 bool updateUDP =false;
 dchatType myType;
 UDP msgSender;
 #define MAX_MSG_LEN 2048
 
+deque<string> globalMsgQ;
+
 pthread_mutex_t uiMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t qMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t uiCond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t qNotFull= PTHREAD_COND_INITIALIZER;
+pthread_cond_t qNotEmpty= PTHREAD_COND_INITIALIZER;
 
 int main(int argc, char *argv[])
 {
@@ -41,6 +47,10 @@ int main(int argc, char *argv[])
     threadArgs tArgs;
     pthread_t uiThread;
     int threadRet;
+
+    mainArgs mArgs;
+    pthread_t mainThread;
+    int mainRet;
 
     if (argc != 2 && argc != 3)
     {
@@ -133,6 +143,9 @@ int main(int argc, char *argv[])
     }
 
     
+    mArgs.listener = &listener;
+    mArgs.globalQ = &globalMsgQ;
+    mainRet = pthread_create(&mainThread, NULL, mainRecv, (void*)&mArgs);
 
     //release ui to run
     pthread_mutex_lock(&uiMutex);
@@ -143,16 +156,28 @@ int main(int argc, char *argv[])
     //message handling loop
     while (mainRunning)
     {
-        char recvMsg[MAX_MSG_LEN];
-        int recvMsgLen;
+        //char recvMsg[MAX_MSG_LEN];
+        //int recvMsgLen;
+        string recvMsg;
+
+        pthread_mutex_lock(&qMutex);
+        while (globalMsgQ.empty())
+        {
+            pthread_cond_wait(&qNotEmpty, &qMutex);
+        }
+        recvMsg = globalMsgQ.front();
+        globalMsgQ.pop_front();
+        pthread_mutex_unlock(&qMutex);
+        pthread_cond_signal(&qNotFull);
         
         //std::cout<<"**Waiting for a new Msg**\n";
-        recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
-                              myPort, myID);
+        //recvMsgLen = listener.recvFromNACK(recvMsg, MAX_MSG_LEN, myName, myIP, 
+        //                      myPort, myID);
         //cout<<"receieved a message."<<endl;
         if (myType == dServer)
         {
-            seqStatus pRet = aSeq.processMSG(recvMsg, recvMsgLen);
+            seqStatus pRet = aSeq.processMSG(recvMsg.c_str(), 
+                                             recvMsg.size());
             if (pRet != 0){}
                 //std::cerr<<"something wrong:"<<pRet<<endl;
         }
@@ -160,9 +185,9 @@ int main(int argc, char *argv[])
         {
             int clientRV=0;
             
-            clientRV= aClnt.msgEnqueue(recvMsg,recvMsgLen);
+            clientRV= aClnt.msgEnqueue(recvMsg.c_str(), recvMsg.size());
             //cout<<"client return value "<<clientRV<<endl;
-	        if( clientRV==10){
+            if( clientRV==10){
                 myType = dServer;
                 myID = aClnt.getID();
                 vector<peer> peerList;
@@ -191,6 +216,7 @@ int main(int argc, char *argv[])
             }
             
         }
+
     }
 
 
@@ -207,6 +233,44 @@ int getAPortNum()
 
     return portNum;
 }
+
+void * mainRecv(void *args)
+{
+    mainArgs *mArgs = (mainArgs *)args;
+    string myName = mArgs->myName;
+    string myIP = mArgs->myIP;
+    int myPort = mArgs->myPort;
+    int myID = mArgs->myID;
+    char recvMsg[MAX_MSG_LEN];
+    string inMsg;
+
+    int recvLen;
+   
+    while (1)
+    {
+        recvLen = mArgs->listener->recvFromNACK(recvMsg, MAX_MSG_LEN,
+                                       myName, myIP, myPort, myID);
+        if (recvLen < 0)
+        {
+            std::cerr<<"recv error, retrying..."<<endl;
+            continue;
+        }
+ 
+        pthread_mutex_lock(&qMutex);
+        while (mArgs->globalQ->size() >= 10)
+        {
+            pthread_cond_wait(&qNotFull, &qMutex);
+        }
+
+
+        inMsg.assign(recvMsg, recvLen);
+        mArgs->globalQ->push_back(inMsg);
+
+        pthread_mutex_unlock(&qMutex);
+        pthread_cond_signal(&qNotEmpty);
+    }
+}
+
 
 void * uiInteract(void *args)
 {
