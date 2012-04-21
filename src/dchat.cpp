@@ -106,8 +106,7 @@ int main(int argc, char *argv[])
     //get started
     UDP listener(myPort);
 
-
-    //ui information
+    //set up the info for the UI thread.
     tArgs.seqIP = seqIP;
     tArgs.seqPort = seqPort;
     tArgs.myIP = myIP;
@@ -136,7 +135,6 @@ int main(int argc, char *argv[])
     {
         
         aClnt.dojoin(seqIP,seqPort,listener);
-        cout<<"after join, leader is :"<<seqIP<<":"<<seqPort<<endl;
         tArgs.seqIP = seqIP;
         tArgs.seqPort = seqPort;
         tArgs.myID = myID = aClnt.getID();
@@ -179,6 +177,7 @@ int main(int argc, char *argv[])
             int clientRV=0;
             
             clientRV= aClnt.msgEnqueue(recvMsg.c_str(), recvMsg.size());
+            //if return value is 10, change from client to server.
             if( clientRV==10){
                 myType = dServer;
                 myID = aClnt.getID();
@@ -186,17 +185,18 @@ int main(int argc, char *argv[])
                 int maxMsgId = aClnt.getMaxCnt();
 
                 peerList = aClnt.getClientList();
-                cout<<"About to switch from client to sequencer!"<<endl;
                 aSeq.switchFromClient(peerList, myID, maxMsgId);
                 
                 pthread_mutex_lock(&uiMutex);
-                cout<<"about to reset msgSender"<<endl;
+
                 msgSender.updateSocket(myIP.c_str(),myPort);
-                cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                 pthread_mutex_unlock(&uiMutex);
                 cout<<"After Election"<<endl;
                 aSeq.printMemberList();
             }
+            //if the return value is 9, update the UDP socket 
+            //used in UI thread with the updated
+            //server's info
             else if(clientRV==9){
                 pthread_mutex_lock(&uiMutex);
                 msgSender.updateSocket((aClnt.getSIP()).c_str(),aClnt.getSPort());
@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+//generate the port number randomly 
 int getAPortNum()
 {
     int portNum = 0;
@@ -222,6 +223,7 @@ int getAPortNum()
     return portNum;
 }
 
+//seperated thread used to deal with the network I/O
 void * mainRecv(void *args)
 {
     mainArgs *mArgs = (mainArgs *)args;
@@ -259,7 +261,7 @@ void * mainRecv(void *args)
     }
 }
 
-
+//the UI thread used to accept user's inputs
 void * uiInteract(void *args)
 {
     threadArgs *outArgs = (threadArgs *)args;
@@ -321,6 +323,8 @@ void * uiInteract(void *args)
                 int tempRV = msgSender.sendToNACK(outMsg.c_str(), 
                                         outMsg.size());
                 pthread_mutex_unlock(&uiMutex);
+                //if the return value is -2, the sequencer is off line.
+                //Then generate a election_req message and send it to itself.
                 if(tempRV==-2){
                     aMaker.setInfo(myName, myIP, myPort, 
                                    outArgs->aClnt->getID());
