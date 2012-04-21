@@ -14,7 +14,7 @@ using namespace std;
 
 pthread_mutex_t udpMutex = PTHREAD_MUTEX_INITIALIZER;
 
-
+//public constructor 
 chatClient::chatClient(string cname, string cIP,int cport){
     name = cname;
     IP = cIP;
@@ -30,19 +30,18 @@ chatClient::chatClient(string cname, string cIP,int cport){
 }
 //if return 10, change to sequencer
 //else return -10, stay as user.
+//use a message queue to handle multiple inputs at the same time
 int chatClient::msgEnqueue(const char* msg, int len){
     string tempMsg(msg,len);
     int toReturn =0;
     bool skip = false;
     inMsgQ.push(tempMsg);
-    //std::cerr<<"get a message\n";
     //process the message queue until it's empty
     //blocking outter messages;
     while (!inMsgQ.empty()) {
         tempMsg = inMsgQ.front();
         //if return 10, change to sequencer
         //else return -10, stay as user.
-        //std::cerr<<"processing a message\n";
         int tempRV = processMSG(tempMsg.c_str(),tempMsg.size());
         if(tempRV==10){
             toReturn=10;
@@ -57,6 +56,9 @@ int chatClient::msgEnqueue(const char* msg, int len){
     
 }
 
+
+//fuction actually used to process the message.
+//it will analyze the header of the message and take actions accordingly.
 int chatClient::processMSG(const char* msg, int mlen)
 {
     peer newUser;
@@ -141,8 +143,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                     newUser.c_id = newID;
                     newUser.port = newPort;
                     clientList.push_back(newUser);
-                    cout<<"after join_broadcast there are "<<clientList.size()<<" users"<<endl;
-                    displayClients();
                     cout<<"NOTICE "<<newUser.name<<" joined on "<<newUser.ip<<":"<<newUser.port<<endl;
                     return 1;
                 }
@@ -204,7 +204,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                         exit(-1);
                     }
                     
-                    //std::cerr<<"my max msg cnt is: "<<msgMaxCnt<<", but I got: "<<seqNum<<endl;
                     //normal case
                     if(seqNum==(msgMaxCnt+1)){
                             cout<<textmsg<<endl;
@@ -236,7 +235,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                 break;
             case election_req:{
                 //do BULLY
-                //vector<peer> timeoutList;
                 if(status==NORMAL){
                     parser.senderInfo(newIP, newName, newPort,newID);
                     
@@ -258,7 +256,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                     exit(-1);
                 }
                 else{
-                    //cout<<"a user with higher ID starts a new election, I am going to shut up."<<endl;
                     electWin=false;
                 }
                 return 1;
@@ -267,7 +264,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //get and setup the info of the new sequencer
                 //here we just ignore the state which this client is in. Cause it's safe 
                 //to change the sequencer here.
-                cout<<"get leader_b"<<endl;
                 if(status==ELEC_CLIENT||status==NORMAL){
                     status = NORMAL;
                     parser.senderInfo(newIP, newName, newPort,newID);
@@ -277,12 +273,9 @@ int chatClient::processMSG(const char* msg, int mlen)
                         s_port = newPort;
                         s_id = newID;
                         sname = newName;
-                        //removeUser(s_id);
                         pthread_mutex_lock(&udpMutex);
                         clntUDP.updateSocket(s_ip.c_str(),s_port);
                         pthread_mutex_unlock(&udpMutex);
-                        cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
-                        cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
                         return 9;
                     }
                 }return 1;
@@ -293,6 +286,8 @@ int chatClient::processMSG(const char* msg, int mlen)
     }
 }
 
+
+//function used to communicate with the sequencer so as to join the chat group.
 int chatClient::dojoin(string rs_ip, int rs_port){
     string outmsg;
     int outlen, saddr_len;
@@ -317,6 +312,9 @@ int chatClient::dojoin(string rs_ip, int rs_port){
     
     return 1;
 }
+
+//overloaded function used so as to ensure all the info are correctly rechieved before we
+//actually starts the chatting.
 
 int chatClient::dojoin(string &rs_ip, int &rs_port, UDP &listener){
     string outmsg;
@@ -358,50 +356,8 @@ int chatClient::dojoin(string &rs_ip, int &rs_port, UDP &listener){
     
     return 1;
 }
-/*
-//return 1 if normal
-//return 10 if sequencer chrashes and change to sequencer.
-int chatClient::sendBroadcastMsg(string msgContent){
-    string tempMsg, outmsg;
-    myMsg tempMessage;
-    int outlen, i;
-    vector<peer> timeoutList;
-    localMsgQ.push(msgContent);
-    while(next){
-        if(localMsgQ.empty()){
-//            cerr<<"Unexpected empty message queue in client: "<<name<<endl;
-//            exit(-1);
-            break;
-        }
-        tempMsg = localMsgQ.front();
-        localMsgQ.pop();
-        myMsg message = mmaker.makeMsg(tempMsg.c_str(),tempMsg.size());
-        msgMaker::serialize(outmsg, outlen, message);
-        next=false;
-        //if timeout, clear local message queue and do election.
-        int temp=0;
-        pthread_mutex_lock(&udpMutex);
-        temp = clntUDP.sendToNACK(outmsg.c_str(),outlen);
-        pthread_mutex_unlock(&udpMutex);
-        if(temp==-2&&status!=ELEC){
-            cout<<"sequencer died!"<<endl;
-            
-            //localMsgQ.clear();
-            for (i=0; i<localMsgQ.size(); i++) {
-                localMsgQ.pop();
-            }
-            next=true;
-            if(doElection()>0){    
-                return 10; 
-            }
-            else return 1;
-        }
-        next = true;
-    }
-    
-    return 1;
-}
-*/
+
+//add new users into the client list.
 
 int chatClient::addNewUser(string name, string newCIP, int newCPort, int newCID){
     peer p;
@@ -414,18 +370,20 @@ int chatClient::addNewUser(string name, string newCIP, int newCPort, int newCID)
     return 1;
 }
 
+//remove the specific user from the cientList
 int chatClient::removeUser(int CID){
     unsigned int i=0;
     vector<peer>::iterator it;
     for (it=clientList.begin(); it!=clientList.end(); it++) {
         if((*it).c_id==CID){
-            //cout<<"remove "<<(*it);
             clientList.erase(it);
             return 1;
         }
     }
     return -1;
 }
+//function used to do the election.
+//***NOTE:not bully here.***
 //return 1 if it's elected to be leader.
 //return -1 if not.
 int chatClient::doElection(){
@@ -437,14 +395,12 @@ int chatClient::doElection(){
     vector<peer>::iterator tempit;
     if(status==NORMAL||status==ELEC_CLIENT){
         status = ELEC;
-        cout<<"before leader search, clientlist has: "<<clientList.size()<<" users"<<endl;
         for(tempit=clientList.begin();tempit!=clientList.end();tempit++){
             if ((*tempit).c_id>maxID) {
                 maxID = (*tempit).c_id;
                 nextLeader = (*tempit);
             }
         }
-        cout<<"maxID is :"<<maxID<<endl;
         if (maxID==C_ID) {
             status =ELEC_LEADER;            
             return 1;
@@ -455,14 +411,11 @@ int chatClient::doElection(){
             tempMsg = mmaker.makeElec();
             status = ELEC_CLIENT;
             msgMaker::serialize(outmsg,outlen,tempMsg);
-            cout<<"before elec unicast"<<endl;
-            cout<<"next leader will be:"<<nextLeader.ip<<":"<<nextLeader.port<<endl;
             pthread_mutex_lock(&udpMutex);
             clntUDP.updateSocket(nextLeader.ip,nextLeader.port);
             pthread_mutex_unlock(&udpMutex);
 
             if((clntUDP.sendToNACK(outmsg.c_str(),outlen))==-2){
-                cout<<"the next sequencer also died, do election again "<<endl;
                 removeUser(maxID);
                 return doElection();
             }
@@ -471,6 +424,8 @@ int chatClient::doElection(){
     }
     return -1;
 }
+
+//function used to tell the sequencer this user is about to leave.
 
 void chatClient::doLeave(){
     myMsg tempMsg = mmaker.makeLeave();
@@ -482,6 +437,7 @@ void chatClient::doLeave(){
     exit(1);
 }
 
+//print out current members of client list, along with the leader, i.e. the sequencer
 //leader info need to be added into the clientList the sequencer returns via the Join_ACK message.
 void chatClient::displayClients(){
 	int i=0;
@@ -499,9 +455,11 @@ void chatClient::displayClients(){
         }		
 	}
 }
+//return the user's UID
 int chatClient::getID(){
     return C_ID;
 }
+//return the current clientlist.
 vector<peer> chatClient::getClientList(){
     return clientList;
 }
