@@ -288,11 +288,10 @@ void * uiInteract(void *args)
                     string tempoutmsg;
                     int templen =0;
                     msgMaker::serialize(tempoutmsg,templen,tempMsg);
-                    pthread_mutex_lock(&uiMutex);
-                    msgSender.updateSocket(myIP.c_str(),myPort);
-                    pthread_mutex_unlock(&uiMutex);
-                    msgSender.sendToNACK(tempoutmsg.c_str(),templen);
                     
+                    UDP tmpSender;
+                    tmpSender.setRemoteAddr(myIP.c_str(), myPort);
+                    tmpSender.sendToNACK(tempoutmsg.c_str(), templen);
 
                 }
             }
