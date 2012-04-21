@@ -169,13 +169,13 @@ int main(int argc, char *argv[])
                 int maxMsgId = aClnt.getMaxCnt();
 
                 peerList = aClnt.getClientList();
-                //cout<<"About to switch from client to sequencer!"<<endl;
+                cout<<"About to switch from client to sequencer!"<<endl;
                 aSeq.switchFromClient(peerList, myID, maxMsgId);
                 
                 pthread_mutex_lock(&uiMutex);
-                //cout<<"about to reset msgSender"<<endl;
+                cout<<"about to reset msgSender"<<endl;
                 msgSender.updateSocket(myIP.c_str(),myPort);
-                //cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
+                cout<<"now the sequencer is: "<<myIP<<":"<<myPort<<endl;
                 pthread_mutex_unlock(&uiMutex);
                 cout<<"After Election"<<endl;
                 aSeq.printMemberList();
