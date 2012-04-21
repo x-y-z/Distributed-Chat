@@ -12,6 +12,7 @@
 
 using namespace std;
 
+pthread_mutex_t udpMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 chatClient::chatClient(string cname, string cIP,int cport){
@@ -133,6 +134,8 @@ int chatClient::processMSG(const char* msg, int mlen)
                     newUser.c_id = newID;
                     newUser.port = newPort;
                     clientList.push_back(newUser);
+                    cout<<"after join_broadcast there are "<<clientList.size()<<" users"<<endl;
+                    displayClients();
                     cout<<"NOTICE "<<newUser.name<<" joined on "<<newUser.ip<<":"<<newUser.port<<endl;
                     return 1;
                 }
@@ -223,7 +226,6 @@ int chatClient::processMSG(const char* msg, int mlen)
                 //do BULLY
                 //vector<peer> timeoutList;
                 if(status==NORMAL){
-                    status=ELEC;
                     parser.senderInfo(newIP, newName, newPort,newID);
                     
                     if(C_ID>newID){
@@ -256,18 +258,18 @@ int chatClient::processMSG(const char* msg, int mlen)
                 
                 status = NORMAL;
                 parser.senderInfo(newIP, newName, newPort,newID);
-                if(newID!=C_ID){
+                if(newID!=C_ID&&newID!=s_id){
                     
                     s_ip = newIP;
                     s_port = newPort;
                     s_id = newID;
                     sname = newName;
                     removeUser(s_id);
-                    
+                    pthread_mutex_lock(&udpMutex);
                     clntUDP.updateSocket(s_ip.c_str(),s_port);
-                    
+                    pthread_mutex_unlock(&udpMutex);
                     cout<<"client "<<C_ID<<" get new leader's broadcast message!"<<endl;
-                    //cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
+                    cout<<"leader's name: "<<newName<<"; leader's IP&Port: "<<newIP<<":"<<newPort<<"; ID: "<<newID<<endl;
                 }
                 return 1;
                 break;
@@ -307,10 +309,11 @@ int chatClient::sendBroadcastMsg(string msgContent){
     int outlen, i;
     vector<peer> timeoutList;
     localMsgQ.push(msgContent);
-    if(next){
+    while(next){
         if(localMsgQ.empty()){
-            cerr<<"Unexpected empty message queue in client: "<<name<<endl;
-            exit(-1);
+//            cerr<<"Unexpected empty message queue in client: "<<name<<endl;
+//            exit(-1);
+            break;
         }
         tempMsg = localMsgQ.front();
         localMsgQ.pop();
@@ -318,8 +321,12 @@ int chatClient::sendBroadcastMsg(string msgContent){
         msgMaker::serialize(outmsg, outlen, message);
         next=false;
         //if timeout, clear local message queue and do election.
-        if(clntUDP.sendToNACK(outmsg.c_str(),outlen)==-2&&status!=ELEC){
-            //cout<<"sequencer died!"<<endl;
+        int temp=0;
+        pthread_mutex_lock(&udpMutex);
+        temp = clntUDP.sendToNACK(outmsg.c_str(),outlen);
+        pthread_mutex_unlock(&udpMutex);
+        if(temp==-2&&status!=ELEC){
+            cout<<"sequencer died!"<<endl;
             
             //localMsgQ.clear();
             for (i=0; i<localMsgQ.size(); i++) {
@@ -327,7 +334,6 @@ int chatClient::sendBroadcastMsg(string msgContent){
             }
             next=true;
             if(doElection()>0){    
-                //cout<<"I am now the new sequencer"<<endl;
                 return 10; 
             }
             else return 1;
@@ -367,53 +373,42 @@ int chatClient::doElection(){
     myMsg tempMsg;
     string outmsg;
     int outlen;
-    status = ELEC;
-//    
-//        
-//    while(status==ELEC&&electWin){}
-//    if(status==ELEC&&!electWin){
-//        return -1;
-//    }
-//    else if(status!=ELEC&&electWin){
-//        return 1;
-//    }
-//    
-//    if(timeoutClients.empty()){
-//        status= NORMAL;
-//        return 1; 
-//    }
-//    else{       
-//        return -1;
-//    }
     int i =0, maxID=0;
-    for(i=0;i<clientList.size();i++){
-        if (clientList[i].c_id>maxID) {
-            maxID = clientList[i].c_id;
-        }
-    }
-    cout<<"maxID is :"<<maxID<<endl;
-    if (maxID==C_ID) {
-        status =NORMAL;
-        
-        return 1;
-    }
-    else{
-        //first notice all the peers that old sequencer is dead
-        //then return -1 to indicate that itself is not the sequencer.
-        tempMsg = mmaker.makeElec();
+    vector<peer>::iterator tempit;
+    if(status==NORMAL){
         status = ELEC;
-        msgMaker::serialize(outmsg,outlen,tempMsg);
-        //cout<<"before broadcast"<<endl;
-        vector<peer>::iterator it;
-        vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
-        if(!timeoutClients.empty()){
-            for(it=timeoutClients.begin();it!=timeoutClients.end();it++){
-                removeUser((*it).c_id);
-                
+        cout<<"before leader search, clientlist has: "<<clientList.size()<<" users"<<endl;
+        for(tempit=clientList.begin();tempit!=clientList.end();tempit++){
+            if ((*tempit).c_id>maxID) {
+                maxID = (*tempit).c_id;
             }
-            return doElection();
         }
-        return -1;
+        cout<<"maxID is :"<<maxID<<endl;
+        if (maxID==C_ID) {
+            status =NORMAL;
+            
+            return 1;
+        }
+        else{
+            //first notice all the peers that old sequencer is dead
+            //then return -1 to indicate that itself is not the sequencer.
+            tempMsg = mmaker.makeElec();
+            status = ELEC;
+            msgMaker::serialize(outmsg,outlen,tempMsg);
+            cout<<"before elec broadcast"<<endl;
+            vector<peer>::iterator it;
+            vector<peer> timeoutClients =  clntUDP.multiCastNACK_T(outmsg.c_str(), outlen, clientList);
+//            if(!timeoutClients.empty()){
+//                cout<<"time out clients during elect"<<endl;
+//                for(it=timeoutClients.begin();it!=timeoutClients.end();it++){
+//                    cout<<(*it)<<endl;
+//                    removeUser((*it).c_id);
+//                    
+//                }
+//                return doElection();
+//            }
+            return -1;
+        }
     }
 }
 
