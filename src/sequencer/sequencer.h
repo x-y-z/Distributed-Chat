@@ -77,34 +77,56 @@ inline ostream& operator<<(ostream &o, const seqStatus &n)
 class sequencer
 {
 private:
-    string my_ip;
-    string my_name;
-    int my_port;
-    int my_id;
-    vector<peer> clientList;
+    string my_ip; /**< sequencer's ip */
+    string my_name; /**< sequncer's name*/
+    int my_port; /**< sequencer's port*/
+    int my_id; /**< sequencer's id*/
+    vector<peer> clientList; /**< the list of all clients, 
+                               sequencer not included */
 
-    int max_id;
-    int msg_seq_id;
+    int max_id; /**< current assigned max id*/
+    int msg_seq_id; /**< maximum message number*/
 private:
-    UDP _udp;
-    deque<string> _MsgQ;
+    UDP _udp; /**< message sending udp*/
+    deque<string> _MsgQ; /**< used to store not processed message*/
 
 public:
+    /**
+     * constructor, assigning name, ip, and port
+     */
     sequencer(const char* name, const char*ip, int port);
+    /**
+     * destructor
+     */
     ~sequencer(){};
 public:
+    /**
+     * processing all kinds of message received by sequencer
+     */
     seqStatus processMSG(const char *msg, int mlen);
-
+    /**
+     * get the id of the sequencer
+     */
     int getID(){ return my_id;};
+    /**
+     * set the id of the sequencer
+     */
     void setID(int aID){ my_id = aID; max_id = aID + 1;};
-
+    /**
+     * set maximum message number
+     */
     void setMaxMsgID(int aID) {msg_seq_id = aID; };
-
+    /**
+     * print out current member list
+     */
     void printMemberList();
-    
+    /**
+     * switching from client to sequencer, preset some necessary information
+     */
     int switchFromClient(const vector<peer> &aList, int myID, int maxMsgID);
 
 private:
+    //below are all for message processing, they are self-explained
     //for join
     int newClientId(){ max_id++; return max_id;}
     int addToClientList(const string &name, const string &ip,

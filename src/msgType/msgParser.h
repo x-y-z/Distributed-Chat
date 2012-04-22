@@ -96,22 +96,68 @@ inline ostream& operator<<(ostream &o, const msgType &n)
 class msgParser
 {
 private:
-    myMsg _content;
-    char *_rawMsg;
-    int _msgLen;
-    bool init;
+    myMsg _content; /**< the message to be parsed */
+    int _msgLen; /**< the length of the message*/
+    bool init; /**< initiatioin status of the parser*/
 public:
+    /**
+     * Default constructor
+     */
     msgParser(){init = false;};
+    /**
+     * Alternative constructor
+     * @param msg message to be parsed
+     * @param len the length of the message
+     */
     msgParser(const char *msg, int len);
+    /**
+     * destructor
+     */
     ~msgParser(){};
 public:
+    /**
+     * tell whether it is a ACK message
+     * @ret is ACK or not
+     */
     bool isACK();
+    /**
+     * get messaage type
+     * @ret message type
+     */
     msgType msgTypeIs();
+    /**
+     * get sender information
+     * @param ip sender's ip
+     * @param name sender's name
+     * @param port sender's port number
+     * @param id sender's id
+     */
     int senderInfo(string &ip, string &name, int &port, int &id);
+    /**
+     * get the name of who joins
+     * @param name the name
+     */
     int joinName(string &name);
+    /**
+     * get current information in the group
+     * @param msgMaxCnt maximum message number
+     * @param my_id id assigned by sequencer
+     * @param peerlist who else are in the chat group
+     */
     int joinFeedback(int &msgMaxCnt, int &my_id, vector<peer> &peerlist); 
+    /**
+     * acquire message
+     * @param text message content
+     */
     int getMsg(string &text);
+    /**
+     * get message and the message sequence number
+     */
     int getMsg(int &msg_seq, string &text);
+    /**
+     * get leader's name
+     * @param name leader's name
+     */
     int leaderName(string &name);
 private:
     int msgContent(char *msg, int &msgLen);
